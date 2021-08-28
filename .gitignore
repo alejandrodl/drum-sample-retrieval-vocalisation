@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Directories
+replication-mehrabi-2016/data/interim
