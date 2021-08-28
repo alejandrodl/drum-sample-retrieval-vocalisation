@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # Directories
-replication-mehrabi-2016/data/interim
+data/external
+data/interim
