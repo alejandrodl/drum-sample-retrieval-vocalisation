@@ -130,4 +130,5 @@ dmypy.json
 
 # Directories
 data/external
-data/interim
+data/interim_1
+data/interim_2
