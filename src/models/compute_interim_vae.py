@@ -27,10 +27,9 @@ from networks_tf import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
-#gpu_name = '/device:CPU:0'
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -40,22 +39,14 @@ if gpus:
     except RuntimeError as e:
         print(e)
 
-# Parameters
-
-#tf.debugging.set_log_device_placement(True)
-#gpus = tf.config.experimental.list_logical_devices('GPU')
-#print(gpus)
-
-percentage_train = 90
+percentage_train = 85
 
 epochs = 10000
 patience_lr = 5
 patience_early = 10
 
-batch_size = 1024
+batch_size = 512
 num_examples_to_generate = 16
-
-#warnings.simplefilter(action='ignore', category=FutureWarning)
 
 dropout = 0.5
 num_filters = 64

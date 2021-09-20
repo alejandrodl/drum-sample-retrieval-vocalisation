@@ -130,5 +130,5 @@ dmypy.json
 
 # Directories
 data/external
-data/interim_1
-data/interim_2
+data/interim
+data/processed
