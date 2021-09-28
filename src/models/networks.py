@@ -48,30 +48,16 @@ class VAE_Interim(tf.keras.Model):
                 tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
                 tf.keras.layers.Dense(units=4*4*128, activation=tf.nn.relu),
                 tf.keras.layers.Reshape(target_shape=(4, 4, 128)),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), activation='sigmoid', padding='same')
+                tf.keras.layers.Conv2DTranspose(
+                    filters=64, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=32, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=16, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=8, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=1, kernel_size=3, strides=2, padding='same')
             ]
         )
 
@@ -148,30 +134,16 @@ class CVAE_Interim(tf.keras.Model):
                 tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
                 tf.keras.layers.Dense(units=4*4*128, activation=tf.nn.relu),
                 tf.keras.layers.Reshape(target_shape=(4, 4, 128)),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.UpSampling2D(size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), activation='sigmoid', padding='same')
+                tf.keras.layers.Conv2DTranspose(
+                    filters=64, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=32, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=16, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=8, kernel_size=3, strides=2, padding='same', activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=1, kernel_size=3, strides=2, padding='same')
             ]
         )
 

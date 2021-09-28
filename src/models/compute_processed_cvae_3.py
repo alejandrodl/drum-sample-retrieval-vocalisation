@@ -389,7 +389,7 @@ for m in range(len(modes)):
 
             model = VAE_Interim(latent_dim)
 
-            optimizer = tf.keras.optimizers.Adam(lr=3*1e-4)
+            optimizer = tf.keras.optimizers.Adam(lr=5*1e-4)
             early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
             lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
@@ -406,7 +406,7 @@ for m in range(len(modes)):
 
             model = CVAE_Interim(latent_dim, num_classes)
 
-            optimizer = tf.keras.optimizers.Adam(lr=3*1e-4)
+            optimizer = tf.keras.optimizers.Adam(lr=5*1e-4)
             early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
             lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
