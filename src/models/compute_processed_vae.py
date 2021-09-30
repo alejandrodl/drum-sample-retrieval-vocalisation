@@ -49,9 +49,92 @@ def sampling(args):
     epsilon = K.random_normal(shape=(batch, dim))
     return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
-# Parameters
+# Create VAE
 
 latent_dim = 16
+
+# Encoder
+
+encoder_input = keras.Input(shape=(128, 128, 1))
+
+x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(encoder_input)
+x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+x = layers.Flatten()(x)
+x = layers.Dense(64, activation="relu")(x)
+
+z_mean = layers.Dense(latent_dim, name="z_mean")(x)
+z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
+
+z = sampling([z_mean, z_log_var])
+
+encoder = keras.Model(encoder_input, [z_mean, z_log_var, z], name="encoder")
+
+# Decoder
+
+latent_inputs = keras.Input(shape=(latent_dim,))
+
+x = layers.Dense(units=4*4*128, activation="relu")(latent_inputs)
+x = layers.Reshape(target_shape=(4,4,128))(x)
+x = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation='relu')(x)
+x = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation='relu')(x)
+x = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation='relu')(x)
+x = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation='relu')(x)
+x = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same')(x)
+
+decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(x)
+
+decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
+
+# Define VAE
+
+decoder_output = decoder(encoder(encoder_input)[2])
+model = Model(encoder_input, decoder_output)
+
+# Loss
+
+reconstruction_loss = keras.losses.mse(keras.layers.Flatten()(encoder_input),keras.layers.Flatten()(decoder_output))
+reconstruction_loss *= 128*128
+
+kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
+kl_loss = K.sum(kl_loss, axis=1)
+kl_loss = -0.5 * kl_loss
+vae_loss = K.mean(reconstruction_loss + kl_loss)
+model.add_loss(vae_loss)
+model.compile(optimizer='adam')
+
+
+
+log_dir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+
+tb_cb = TensorBoard(
+    log_dir=log_dir, 
+    profile_batch=0)
+
+es_cb = EarlyStopping(
+    monitor='val_loss',
+    verbose=True,
+    patience=7,
+    restore_best_weights=True)
+
+lr_cb = ReduceLROnPlateau(
+    monitor='val_loss',
+    verbose=True,
+    patience=4)
+
+cb = [tb_cb, es_cb, lr_cb]
         
 # Parameters
 
@@ -89,23 +172,23 @@ Pretrain_Classes_IMI = np.zeros(1)
 
 # AVP Personal
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP.npy')))
+#Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP.npy')))
+#Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP.npy')))
 
 # AVP Fixed Small
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP_Fixed.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP_Fixed.npy')))
+#Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP_Fixed.npy')))
+#Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP_Fixed.npy')))
 
 # LVT 2
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_2.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_2.npy')))
+#Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_2.npy')))
+#Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_2.npy')))
 
 # LVT 3
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_3.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_3.npy')))
+#Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_3.npy')))
+#Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_3.npy')))
 
 # Beatbox
 
@@ -127,8 +210,8 @@ Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data
 
 # Misc
 
-Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_Misc.npy')))
-Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_Misc.npy')))
+#Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_Misc.npy')))
+#Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_Misc.npy')))
 
 Pretrain_Dataset_REF = Pretrain_Dataset_REF[1:]
 Pretrain_Classes_REF = Pretrain_Classes_REF[1:]
@@ -408,88 +491,11 @@ for m in range(len(modes)):
 
             set_seeds(it)
 
-            # Encoder
+            #model = VAE(encoder, decoder)
 
-            encoder_input = keras.Input(shape=(128, 128, 1))
-
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(encoder_input)
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Flatten()(x)
-            x = layers.Dense(64, activation="relu")(x)
-
-            z_mean = layers.Dense(latent_dim, name="z_mean")(x)
-            z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
-
-            z = sampling([z_mean, z_log_var])
-
-            encoder = keras.Model(encoder_input, [z_mean, z_log_var, z], name="encoder")
-
-            # Decoder
-
-            latent_inputs = keras.Input(shape=(latent_dim,))
-
-            x = layers.Dense(units=4*4*128, activation="relu")(latent_inputs)
-            x = layers.Reshape(target_shape=(4,4,128))(x)
-            x = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation='relu')(x)
-            x = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation='relu')(x)
-            x = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation='relu')(x)
-            x = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation='relu')(x)
-            x = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same')(x)
-
-            decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(x)
-
-            decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
-
-            # Define VAE
-
-            decoder_output = decoder(encoder(encoder_input)[2])
-            model = Model(encoder_input, decoder_output)
-
-            # Loss
-
-            reconstruction_loss = keras.losses.mse(keras.layers.Flatten()(encoder_input),keras.layers.Flatten()(decoder_output))
-            reconstruction_loss *= 128*128
-
-            kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
-            kl_loss = K.sum(kl_loss, axis=1)
-            kl_loss = -0.5 * kl_loss
-            vae_loss = K.mean(reconstruction_loss + kl_loss)
-            model.add_loss(vae_loss)
-            model.compile(optimizer='adam')
-
-
-
-            log_dir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-
-            tb_cb = TensorBoard(
-                log_dir=log_dir, 
-                profile_batch=0)
-
-            es_cb = EarlyStopping(
-                monitor='val_loss',
-                verbose=True,
-                patience=7,
-                restore_best_weights=True)
-
-            lr_cb = ReduceLROnPlateau(
-                monitor='val_loss',
-                verbose=True,
-                patience=4)
-
-            cb = [tb_cb, es_cb, lr_cb]
+            #optimizer = tf.keras.optimizers.Adam(lr=5*1e-4)
+            #early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
+            #lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
             with tf.device(gpu_name):
 
