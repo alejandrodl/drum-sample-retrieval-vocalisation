@@ -22,7 +22,7 @@ from networks import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
 #gpu_name = '/device:CPU:0'

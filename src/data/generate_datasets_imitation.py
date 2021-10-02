@@ -784,9 +784,9 @@ np.save('data/interim/Classes_VIPS_Ref', np.array(Classes))
 
 
 
-# Create VIPS Dataset Reference
+# Create VIPS Dataset Imitations
 
-print('VIPS Dataset Reference')
+print('VIPS Dataset Imitations')
 
 path_audio = 'data/external/VIPS_Dataset_KSH/imitations'
 
