@@ -17,7 +17,7 @@ class extract_features_16():
         
     def compute(self, audio, framesize):
         
-        hopsize = 512
+        hopsize = 345
         audio = essentia.array(audio)
         feature_vector = np.zeros(self.num_features)
         
