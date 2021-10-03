@@ -27,7 +27,7 @@ from itertools import permutations, combinations, product
 
 num_iterations = 1
 num_iterations_lr = 10
-modes = ['RI','KSH','RI_KSH','unsupervised']
+modes = ['eng_mfcc_env','unsupervised','RI','KSH','RI_KSH']
 
 # Calculate rankings
 
@@ -47,7 +47,10 @@ for md in range(len(modes)):
 
         # Load Embeddings
 
-        features = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
+        if mode=='eng_mfcc_env':
+            features = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_MFCC_ENV.npy')
+        else:
+            features = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
 
         for n in range(features.shape[1]):
             features[:,n] = (features[:,n]-np.mean(features[:,n]))/(np.std(features[:,n])+1e-16)
@@ -145,10 +148,11 @@ plt.rc('grid', linestyle="-", color='grey')
 plt.rcParams['axes.axisbelow'] = True
 plt.figure(figsize=(8,6))
 plt.title('Mean Recall at Rank Performance', fontsize=18)
-plt.scatter(np.arange(18)+1,REC[3],marker='D',edgecolor='black',s=150,c='black',label='Unsupervised')
-plt.scatter(np.arange(18)+1,REC[0],marker='D',edgecolor='black',s=150,c='blue',label='RI')
-plt.scatter(np.arange(18)+1,REC[1],marker='D',edgecolor='black',s=150,c='red',label='KSH')
-plt.scatter(np.arange(18)+1,REC[2],marker='D',edgecolor='black',s=150,c='green',label='RI_KSH')
+plt.scatter(np.arange(18)+1,REC[0],marker='D',edgecolor='black',s=150,c='grey',label='MFCC + Env')
+plt.scatter(np.arange(18)+1,REC[1],marker='D',edgecolor='black',s=150,c='black',label='Unsupervised')
+plt.scatter(np.arange(18)+1,REC[2],marker='D',edgecolor='black',s=150,c='blue',label='RI')
+plt.scatter(np.arange(18)+1,REC[3],marker='D',edgecolor='black',s=150,c='red',label='KSH')
+plt.scatter(np.arange(18)+1,REC[4],marker='D',edgecolor='black',s=150,c='green',label='RI_KSH')
 plt.yticks(fontsize=12)
 plt.xticks(np.arange(1, 19, 1), fontsize=12)
 plt.xlabel('n', fontsize=16)

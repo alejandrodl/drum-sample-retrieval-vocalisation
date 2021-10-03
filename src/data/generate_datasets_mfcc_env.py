@@ -1,6 +1,7 @@
 import os
 import pdb
 import numpy as np
+import librosa
 
 import essentia
 from essentia.standard import *
@@ -83,14 +84,16 @@ list_wav.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 extractor = extract_features_16()
 features = np.zeros((len(list_wav),extractor.num_features))
 
-for i in range(len(list_wav)):
+for n in range(len(list_wav)):
 
-    audio, fs = librosa.load(list_wav[i], sr=44100)
+    audio, fs = librosa.load(list_wav[n], sr=44100)
     audio = audio/np.max(abs(audio))
 
     features[n] = extractor.compute(audio,frame_size)
 
-np.save('../../data/processed/' + mode + '/Dataset_VIPS_Ref_MFCC_ENV', Spec_Matrix_All)
+print(features.shape)
+
+np.save('../../data/processed/' + mode + '/Dataset_VIPS_Ref_MFCC_ENV', features)
 
 
 
@@ -114,11 +117,13 @@ list_wav.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 extractor = extract_features_16()
 features = np.zeros((len(list_wav),extractor.num_features))
 
-for i in range(len(list_wav)):
+for n in range(len(list_wav)):
 
-    audio, fs = librosa.load(list_wav[i], sr=44100)
+    audio, fs = librosa.load(list_wav[n], sr=44100)
     audio = audio/np.max(abs(audio))
 
     features[n] = extractor.compute(audio,frame_size)
 
-np.save('../../data/processed/' + mode + '/Dataset_VIPS_Imi_MFCC_ENV', Spec_Matrix_All)
+print(features.shape)
+
+np.save('../../data/processed/' + mode + '/Dataset_VIPS_Imi_MFCC_ENV', features)

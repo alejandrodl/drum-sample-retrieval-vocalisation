@@ -47,7 +47,7 @@ list_csv = sorted(list_csv)
 list_wav.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 list_csv.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 
-num_cuts = 50
+num_cuts = 20
 
 cut_step = len(list_wav)//num_cuts
 

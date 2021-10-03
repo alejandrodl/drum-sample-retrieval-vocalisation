@@ -146,17 +146,17 @@ latent_dim = 16
 #print(gpus)
 
 #modes = ['unsupervised','RI','KSH','RI_KSH']
-modes = ['RI']
+modes = ['unsupervised']
 
 percentage_train = 80
 
-epochs = 50
+epochs = 40
 
 batch_size = 512
 #latent_dim = 16
 
 #num_crossval = 5
-num_iterations = 10
+num_iterations = 5
 
 # Main
 
@@ -285,9 +285,6 @@ Pretrain_Dataset_Eval_REF = np.clip((Pretrain_Dataset_Eval_REF-min_data)/(max_da
 Pretrain_Dataset_Eval_IMI = np.clip((Pretrain_Dataset_Eval_IMI-min_data)/(max_data-min_data+1e-16),0,1)
 
 Pretrain_Dataset = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI)).astype('float32')
-
-np.random.seed(0)
-np.random.shuffle(Pretrain_Dataset)
 
 print('Done.')
 
@@ -480,9 +477,6 @@ for m in range(len(modes)):
 
         Pretrain_Classes = np.concatenate((Pretrain_Classes_REF_Num,Pretrain_Classes_IMI_Num)).astype('float32')
 
-        np.random.seed(0)
-        np.random.shuffle(Pretrain_Classes)
-
         num_classes = 8
 
     print('Done.')
@@ -521,7 +515,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(4,num_iterations):
+    for it in range(num_iterations):
 
         print('\n')
         print('Iteration ' + str(it))
