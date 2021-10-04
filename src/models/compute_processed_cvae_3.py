@@ -31,9 +31,10 @@ class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
       patience: Number of epochs to wait after min has been hit. After this
       number of no improvement, training stops.
   """
-    def __init__(self, patience=0):
+    def __init__(self, patience=0, min_delta=0.):
         super(EarlyStoppingAtMinLoss, self).__init__()
         self.patience = patience
+        self.min_delta = min_delta
         # best_weights to store the weights at which the minimum loss occurs.
         self.best_weights = None
 
@@ -47,7 +48,7 @@ class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         current = np.mean(logs.get("val_loss"))
-        if np.less(current, self.best):
+        if np.less(current, self.best) and self.best-current>=self.min_delta:
             self.best = current
             self.wait = 0
             # Record the best weights if current results is better (less).
@@ -150,13 +151,13 @@ modes = ['RI_KSH']
 
 percentage_train = 80
 
-epochs = 40
+epochs = 10000
 
 batch_size = 512
 #latent_dim = 16
 
 #num_crossval = 5
-num_iterations = 5
+num_iterations = 1
 
 # Main
 
@@ -747,7 +748,7 @@ for m in range(len(modes)):
             with tf.device(gpu_name):
 
                 #model.compile(optimizer=optimizer)
-                history = model.fit([pretrain_dataset_train,pretrain_classes_train], batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=([pretrain_dataset_test,pretrain_classes_test], None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                history = model.fit([pretrain_dataset_train,pretrain_classes_train], batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=([pretrain_dataset_test,pretrain_classes_test], None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
                 #history = model.fit([pretrain_dataset_train,pretrain_classes_train], validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(7),LearningRateSchedulerCustom(3)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')

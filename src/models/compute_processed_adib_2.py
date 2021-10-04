@@ -40,9 +40,10 @@ class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
       patience: Number of epochs to wait after min has been hit. After this
       number of no improvement, training stops.
   """
-    def __init__(self, patience=0):
+    def __init__(self, patience=0, min_delta=0.):
         super(EarlyStoppingAtMinLoss, self).__init__()
         self.patience = patience
+        self.min_delta = min_delta
         # best_weights to store the weights at which the minimum loss occurs.
         self.best_weights = None
 
@@ -56,7 +57,7 @@ class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         current = np.mean(logs.get("val_loss"))
-        if np.less(current, self.best):
+        if np.less(current, self.best) and self.best-current>=self.min_delta:
             self.best = current
             self.wait = 0
             # Record the best weights if current results is better (less).
@@ -111,7 +112,7 @@ class LearningRateSchedulerCustom(keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -165,7 +166,7 @@ batch_size = 128
 #latent_dim = 16
 
 #num_crossval = 5
-num_iterations = 5
+num_iterations = 1
 
 # Main
 
@@ -277,27 +278,26 @@ for m in range(len(modes)):
 
         # Encoder
 
-        encoder_input = keras.Input(shape=(128*128))
+        encoder_input = keras.Input(shape=(128,128,1))
 
-        #encoder_input = layers.Concatenate(axis=0)([encoder_input,tf.zeros((batch_size-encoder_input.shape[0],128,128,1))])
-        x = layers.Reshape((128,128,1))(encoder_input)
-        x = layers.Conv2D(filters=1, kernel_size=(3,5), strides=(1,1), activation=None, padding='same')(x)
-        #x = layers.BatchNormalization()(x)
+        x = layers.Conv2D(filters=1, kernel_size=(3,5), strides=(1,1), activation=None, padding='same')(encoder_input)
+        x = layers.BatchNormalization()(x)
+        #x = layers.LeakyReLU(alpha=0.2)(x)
         x = layers.ReLU()(x)
         x = layers.Conv2D(filters=8, kernel_size=(10,10), strides=(2,2), activation=None, padding='same')(x)
-        #x = layers.BatchNormalization()(x)
+        x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
         x = layers.Conv2D(filters=16, kernel_size=(10,10), strides=(4,2), activation=None, padding='same')(x)
-        #x = layers.BatchNormalization()(x)
+        x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
         x = layers.Conv2D(filters=24, kernel_size=(10,10), strides=(4,2), activation=None, padding='same')(x)
-        #x = layers.BatchNormalization()(x)
+        x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
         x = layers.Conv2D(filters=32, kernel_size=(10,10), strides=(4,4), activation=None, padding='same')(x)
-        #x = layers.BatchNormalization()(x)
-        x = layers.ReLU()(x)
+        x = layers.BatchNormalization()(x)
+        xx = layers.ReLU()(x)
         x = layers.Flatten()(x)
-        x = layers.Dropout(0.3)(x)
+        #x = layers.Dropout(0.3)(x)
         #x = layers.Dense(64, activation="relu")(x)
 
         z = layers.Dense(latent_dim, name="z")(x)
@@ -314,16 +314,16 @@ for m in range(len(modes)):
         #x = layers.Dropout(0.5)(x)
         dec = layers.Reshape(target_shape=(1,4,32))(dec)
         dec = layers.Conv2DTranspose(filters=24, kernel_size=10, strides=(2,2), padding='same', activation=None)(dec)
-        #dec = layers.BatchNormalization()(dec)
+        dec = layers.BatchNormalization()(dec)
         dec = layers.ReLU()(dec)
         dec = layers.Conv2DTranspose(filters=16, kernel_size=10, strides=(4,2), padding='same', activation=None)(dec)
-        #dec = layers.BatchNormalization()(dec)
+        dec = layers.BatchNormalization()(dec)
         dec = layers.ReLU()(dec)
         dec = layers.Conv2DTranspose(filters=8, kernel_size=10, strides=(4,2), padding='same', activation=None)(dec)
-        #dec = layers.BatchNormalization()(dec)
+        dec = layers.BatchNormalization()(dec)
         dec = layers.ReLU()(dec)
         dec = layers.Conv2DTranspose(filters=1, kernel_size=10, strides=(4,4), padding='same', activation=None)(dec)
-        #dec = layers.BatchNormalization()(dec)
+        dec = layers.BatchNormalization()(dec)
         dec = layers.ReLU()(dec)
         decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=(3,5), strides=(1,1), padding='same', activation='relu')(dec)
 
@@ -352,13 +352,13 @@ for m in range(len(modes)):
         es_cb = EarlyStopping(
             monitor='val_loss',
             verbose=True,
-            patience=10,
+            patience=20,
             restore_best_weights=True)
 
         lr_cb = ReduceLROnPlateau(
             monitor='val_loss',
             verbose=True,
-            patience=5)
+            patience=10)
 
         cb = [tb_cb, es_cb, lr_cb]
 
@@ -366,15 +366,13 @@ for m in range(len(modes)):
 
         #training_generator = BalancedDataGenerator(pretrain_dataset_train, pretrain_classes_train, datagen, batch_size=batch_size)
 
-        pretrain_dataset_train_flat = pretrain_dataset_train.reshape((pretrain_dataset_train.shape[0],128*128))
-        pretrain_dataset_test_flat = pretrain_dataset_test.reshape((pretrain_dataset_test.shape[0],128*128))
+        training_generator = tf.data.Dataset.from_tensor_slices((pretrain_dataset_train, pretrain_classes_train))
+        training_generator = training_generator.batch(batch_size, drop_remainder=True)
 
-        validation_generator = tf.data.Dataset.from_tensor_slices((pretrain_dataset_test_flat, pretrain_classes_test))
+        validation_generator = tf.data.Dataset.from_tensor_slices((pretrain_dataset_test, pretrain_classes_test))
         validation_generator = validation_generator.batch(batch_size, drop_remainder=True)
         #validation_generator = BalancedDataGenerator(pretrain_dataset_test, pretrain_classes_test, datagen, batch_size=batch_size)
         #steps_per_epoch = training_generator.steps_per_epoch
-
-        training_generator = BalancedBatchGenerator(pretrain_dataset_train_flat, pretrain_classes_train, sampler=NearMiss(), batch_size=batch_size, random_state=0)
 
         #training_generator = training_generator.filter(lambda x, y: tf.equal(tf.shape(x), batch_size))
 
@@ -386,7 +384,7 @@ for m in range(len(modes)):
 
             #model.compile(optimizer=optimizer)
             #history = model.fit(training_generator, steps_per_epoch=steps_per_epoch, validation_data=validation_generator, epochs=epochs, callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
-            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10),LearningRateSchedulerCustom(5)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0),LearningRateSchedulerCustom(5)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
             #history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test, None), callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')
@@ -396,10 +394,10 @@ for m in range(len(modes)):
         Pretrain_Dataset_Eval_REF_Expanded = np.expand_dims(Pretrain_Dataset_Eval_REF,axis=-1).astype('float32')
         Pretrain_Dataset_Eval_IMI_Expanded = np.expand_dims(Pretrain_Dataset_Eval_IMI,axis=-1).astype('float32')
 
-        embeddings_ref = encoder(Pretrain_Dataset_Eval_REF_Expanded.reshape((Pretrain_Dataset_Eval_REF_Expanded.shape[0],128*128)))
-        embeddings_imi = encoder(Pretrain_Dataset_Eval_IMI_Expanded.reshape((Pretrain_Dataset_Eval_IMI_Expanded.shape[0],128*128)))
-        reconstructions_ref = model.predict(Pretrain_Dataset_Eval_REF_Expanded.reshape((Pretrain_Dataset_Eval_REF_Expanded.shape[0],128*128)))
-        reconstructions_imi = model.predict(Pretrain_Dataset_Eval_IMI_Expanded.reshape((Pretrain_Dataset_Eval_IMI_Expanded.shape[0],128*128)))
+        embeddings_ref = encoder(Pretrain_Dataset_Eval_REF_Expanded)
+        embeddings_imi = encoder(Pretrain_Dataset_Eval_IMI_Expanded)
+        reconstructions_ref = model.predict(Pretrain_Dataset_Eval_REF_Expanded)
+        reconstructions_imi = model.predict(Pretrain_Dataset_Eval_IMI_Expanded)
 
         print(embeddings_ref.shape)
         print(embeddings_imi.shape)

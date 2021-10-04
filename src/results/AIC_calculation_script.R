@@ -1,0 +1,18 @@
+library(lme4)
+library(lmerTest)
+AICs <- vector()
+data <- read.table("results/LMER_Dataset.csv", header=TRUE, sep=",", row.names=NULL)
+data[,2] = as.factor(data[,2])
+data[,3] = as.factor(data[,3])
+data[,4] = as.factor(data[,4])
+data[,5] = as.factor(data[,5])
+data[,6] = as.factor(data[,6])
+data[,8] = as.factor(data[,8])
+c <- 1
+for (dist in c("tim","adib","vae","cvae1","cvae2","cvae3","vaeb","cvae1b","cvae2b","cvae3b")){
+f <- formula(paste("rating ~ (1|listener/trial) + (1|imitator) + rated_sound * ", dist))
+model <- lmer(formula=f, data=data)
+AICs <- append(AICs, extractAIC(model)[2])
+print(paste(sprintf("%s: %f", dist, AICs[c]-51000)))
+c <- c+1
+}

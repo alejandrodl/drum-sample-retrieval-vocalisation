@@ -20,8 +20,9 @@ from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampli
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import TensorBoard, ReduceLROnPlateau, EarlyStopping
 
-from networks import *
+from sklearn.model_selection import StratifiedShuffleSplit
 
+from networks import *
 
 
 class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
@@ -103,7 +104,7 @@ class LearningRateSchedulerCustom(keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -147,7 +148,7 @@ latent_dim = 16
 #print(gpus)
 
 #modes = ['unsupervised','RI','KSH','RI_KSH']
-modes = ['unsupervised']
+modes = ['ae_bark']
 
 percentage_train = 80
 
@@ -177,36 +178,36 @@ Pretrain_Classes_IMI = np.zeros(1)
 
 print('AVP')
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP.npy')))
+Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP_Bark.npy')))
+Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP_Bark.npy')))
 
 # AVP Fixed Small
 
 print('AVP Fixed')
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP_Fixed.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP_Fixed.npy')))
+Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP_Fixed_Bark.npy')))
+Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP_Fixed_Bark.npy')))
 
 # LVT 2
 
 print('LVT 2')
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_2.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_2.npy')))
+Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_2_Bark.npy')))
+Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_2_Bark.npy')))
 
 # LVT 3
 
 print('LVT 3')
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_3.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_3.npy')))
+Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_3_Bark.npy')))
+Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_3_Bark.npy')))
 
 # Beatbox
 
 print('Beatbox')
 
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_Beatbox.npy')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_Beatbox.npy')))
+Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_Beatbox_Bark.npy')))
+Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_Beatbox_Bark.npy')))
 
 Pretrain_Dataset_IMI = Pretrain_Dataset_IMI[1:]
 Pretrain_Classes_IMI = Pretrain_Classes_IMI[1:]
@@ -220,15 +221,15 @@ Pretrain_Classes_REF = np.zeros(1)
 
 print('BFD')
 
-Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_BFD.npy')))
-Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_BFD.npy')))
+Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_BFD_Bark.npy')))
+Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_BFD_Bark.npy')))
 
 # Misc
 
 print('Misc')
 
-Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_Misc.npy')))
-Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_Misc.npy')))
+Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_Misc_Bark.npy')))
+Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_Misc_Bark.npy')))
 
 Pretrain_Dataset_REF = Pretrain_Dataset_REF[1:]
 Pretrain_Classes_REF = Pretrain_Classes_REF[1:]
@@ -237,10 +238,10 @@ Pretrain_Classes_REF = Pretrain_Classes_REF[1:]
 
 print('VIPS')
 
-Pretrain_Dataset_Eval_REF = np.load('../../data/interim/Dataset_VIPS_Ref.npy')
+Pretrain_Dataset_Eval_REF = np.load('../../data/interim/Dataset_VIPS_Ref_Bark.npy')
 Pretrain_Classes_Eval_REF = np.load('../../data/interim/Classes_VIPS_Ref.npy')
 
-Pretrain_Dataset_Eval_IMI = np.load('../../data/interim/Dataset_VIPS_Imi.npy')
+Pretrain_Dataset_Eval_IMI = np.load('../../data/interim/Dataset_VIPS_Imi_Bark.npy')
 Pretrain_Classes_Eval_IMI = np.load('../../data/interim/Classes_VIPS_Imi.npy')
 
 print('Done.')
@@ -249,32 +250,8 @@ print('Normalising data...')
 
 # Normalise data
 
-print('First Norm')
+print('Normalise')
 
-#all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI,Pretrain_Dataset_Eval_REF,Pretrain_Dataset_Eval_IMI))
-all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI))
-
-min_data = np.min(all_datasets)
-max_data = np.max(all_datasets)
-
-Pretrain_Dataset_REF = (Pretrain_Dataset_REF-min_data)/(max_data-min_data+1e-16)
-Pretrain_Dataset_IMI = (Pretrain_Dataset_IMI-min_data)/(max_data-min_data+1e-16)
-Pretrain_Dataset_Eval_REF = np.clip((Pretrain_Dataset_Eval_REF-min_data)/(max_data-min_data+1e-16),0,1)
-Pretrain_Dataset_Eval_IMI = np.clip((Pretrain_Dataset_Eval_IMI-min_data)/(max_data-min_data+1e-16),0,1)
-
-print('Log')
-
-Pretrain_Dataset_REF = np.log(Pretrain_Dataset_REF+1e-4)
-print('Log')
-Pretrain_Dataset_IMI = np.log(Pretrain_Dataset_IMI+1e-4)
-print('Log')
-Pretrain_Dataset_Eval_REF = np.log(Pretrain_Dataset_Eval_REF+1e-4)
-print('Log')
-Pretrain_Dataset_Eval_IMI = np.log(Pretrain_Dataset_Eval_IMI+1e-4)
-
-print('Second Norm')
-
-#all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI,Pretrain_Dataset_Eval_REF,Pretrain_Dataset_Eval_IMI))
 all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI))
 
 min_data = np.min(all_datasets)
@@ -310,7 +287,7 @@ for m in range(len(modes)):
 
     print('Transforming labels...')
 
-    if mode=='unsupervised':
+    if 'unsupervised' in mode or 'ae' in mode:
 
         Pretrain_Classes_REF_Num = np.zeros(len(Pretrain_Classes_REF))
         for n in range(len(Pretrain_Classes_REF)):
@@ -336,7 +313,7 @@ for m in range(len(modes)):
 
         Pretrain_Classes = np.concatenate((Pretrain_Classes_REF_Num,Pretrain_Classes_IMI_Num)).astype('float32')
 
-    elif mode=='RI':
+    elif 'RI' in mode:
 
         Pretrain_Classes_REF_Num = np.zeros(len(Pretrain_Classes_REF))
         for n in range(len(Pretrain_Classes_REF)):
@@ -384,7 +361,7 @@ for m in range(len(modes)):
 
         num_classes = 2
 
-    elif mode=='KSH':
+    elif 'KSH' in mode:
 
         Pretrain_Classes_REF_Num = np.zeros(len(Pretrain_Classes_REF))
         for n in range(len(Pretrain_Classes_REF)):
@@ -432,7 +409,7 @@ for m in range(len(modes)):
 
         num_classes = 4
 
-    elif mode=='RI_KSH':
+    elif 'RI_KSH' in mode:
 
         Pretrain_Classes_REF_Num = np.zeros(len(Pretrain_Classes_REF))
         for n in range(len(Pretrain_Classes_REF)):
@@ -482,32 +459,31 @@ for m in range(len(modes)):
 
     print('Done.')
 
-    if mode!='unsupervised':
+    if 'unsupervised' in mode or 'ae' in mode:
+
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
+        for train_index, test_index in sss.split(Pretrain_Dataset, Pretrain_Classes):
+            pretrain_dataset_train, pretrain_dataset_test = Pretrain_Dataset[train_index], Pretrain_Dataset[test_index]
+            pretrain_classes_train, pretrain_classes_test = Pretrain_Classes[train_index], Pretrain_Classes[test_index]
+    
+    else:
 
         Pretrain_Classes_OneHot = np.zeros((Pretrain_Dataset.shape[0],num_classes))
         for n in range(Pretrain_Dataset.shape[0]):
             Pretrain_Classes_OneHot[n,int(Pretrain_Classes[n])] = 1
 
-        Pretrain_Classes = Pretrain_Classes_OneHot.copy()
-
-    cutoff_train = int((percentage_train/100)*Pretrain_Dataset.shape[0])
-
-    pretrain_dataset_train = Pretrain_Dataset[:cutoff_train].astype('float32')
-    pretrain_classes_train = Pretrain_Classes[:cutoff_train].astype('float32')
-    pretrain_dataset_test = Pretrain_Dataset[cutoff_train:].astype('float32')
-    pretrain_classes_test = Pretrain_Classes[cutoff_train:].astype('float32')
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
+        for train_index, test_index in sss.split(Pretrain_Dataset, Pretrain_Classes):
+            pretrain_dataset_train, pretrain_dataset_test = Pretrain_Dataset[train_index], Pretrain_Dataset[test_index]
+            pretrain_classes_train, pretrain_classes_test = Pretrain_Classes_OneHot[train_index], Pretrain_Classes_OneHot[test_index]
 
     max_index_train = pretrain_dataset_train.shape[0]-(pretrain_dataset_train.shape[0]%batch_size)
     max_index_test = pretrain_dataset_test.shape[0]-(pretrain_dataset_test.shape[0]%batch_size)
 
-    #max_index = Pretrain_Dataset.shape[0]-(Pretrain_Dataset.shape[0]%batch_size)
-
-    #pretrain_dataset_train = Pretrain_Dataset[:max_index].astype('float32')
-    #pretrain_classes_train = Pretrain_Classes[:max_index].astype('float32')
-    pretrain_dataset_train = Pretrain_Dataset[:max_index_train].astype('float32')
-    pretrain_classes_train = Pretrain_Classes[:max_index_train].astype('float32')
-    pretrain_dataset_test = Pretrain_Dataset[:max_index_test].astype('float32')
-    pretrain_classes_test = Pretrain_Classes[:max_index_test].astype('float32')
+    pretrain_dataset_train = pretrain_dataset_train[:max_index_train].astype('float32')
+    pretrain_classes_train = pretrain_classes_train[:max_index_train].astype('float32')
+    pretrain_dataset_test = pretrain_dataset_test[:max_index_test].astype('float32')
+    pretrain_classes_test = pretrain_classes_test[:max_index_test].astype('float32')
 
     pretrain_dataset_train = np.expand_dims(pretrain_dataset_train,axis=-1)
     pretrain_dataset_test = np.expand_dims(pretrain_dataset_test,axis=-1)
@@ -527,7 +503,7 @@ for m in range(len(modes)):
 
         set_seeds(it)
 
-        if mode=='unsupervised':
+        if 'unsupervised' in mode or 'ae' in mode:
 
             set_seeds(it)
 
@@ -555,12 +531,9 @@ for m in range(len(modes)):
             #x = layers.Dense(64, activation="relu")(x)
             x = layers.Dropout(0.3)(x)
 
-            z_mean = layers.Dense(latent_dim, name="z_mean")(x)
-            z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
+            z = layers.Dense(latent_dim, name="z")(x)
 
-            z = sampling([z_mean, z_log_var])
-
-            encoder = keras.Model(encoder_input, [z_mean, z_log_var, z], name="encoder")
+            encoder = keras.Model(encoder_input, z, name="encoder")
 
             # Decoder
 
@@ -575,24 +548,20 @@ for m in range(len(modes)):
             dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
             dec = layers.Conv2DTranspose(filters=8, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
             dec = layers.Conv2DTranspose(filters=1, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
-            decoder_outputs = layers.Conv2DTranspose(1, 3, activation="relu", padding="same")(dec)
+            decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=1, padding="same", activation="relu")(dec)
 
             decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
 
             # Define VAE
 
-            decoder_output = decoder(encoder(encoder_input)[2])
+            decoder_output = decoder(encoder(encoder_input))
             model = Model(encoder_input, decoder_output)
 
             # Loss
 
-            reconstruction_loss = keras.losses.mse(keras.layers.Flatten()(encoder_input),keras.layers.Flatten()(decoder_output))
-            reconstruction_loss *= 128*128
+            vae_loss = keras.losses.mse(keras.layers.Flatten()(encoder_input),keras.layers.Flatten()(decoder_output))
+            vae_loss *= 128*128
 
-            kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
-            kl_loss = K.sum(kl_loss, axis=1)
-            kl_loss = -0.5 * kl_loss
-            vae_loss = K.mean(reconstruction_loss + kl_loss)
             model.add_loss(vae_loss)
             model.compile(optimizer='adam')
 
@@ -618,7 +587,7 @@ for m in range(len(modes)):
             with tf.device(gpu_name):
 
                 #model.compile(optimizer=optimizer)
-                history = model.fit(pretrain_dataset_train, validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=(pretrain_dataset_test,None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
                 #history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test, None), callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         else:
@@ -699,13 +668,14 @@ for m in range(len(modes)):
             dec = Reshape(tuple(n_x_conv[1:]))(dec)
             dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
             dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
+            dec = layers.Conv2DTranspose(filters=16, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
+            dec = layers.Conv2DTranspose(filters=8, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
+            decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
 
             #decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(dec)
 
             decoder =  Model([latent_inputs, decoder_classes], decoder_outputs, name="decoder")
+            print(decoder.summary())
 
             # Define VAE
 
@@ -747,10 +717,8 @@ for m in range(len(modes)):
 
             with tf.device(gpu_name):
 
-                #model.compile(optimizer=optimizer)
-                history = model.fit([pretrain_dataset_train,pretrain_classes_train], batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=([pretrain_dataset_test,pretrain_classes_test], None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
-                #history = model.fit([pretrain_dataset_train,pretrain_classes_train], validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(7),LearningRateSchedulerCustom(3)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
-
+                history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=(pretrain_dataset_test,None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')
 
         # Compute processed features
@@ -758,7 +726,7 @@ for m in range(len(modes)):
         Pretrain_Dataset_Eval_REF_Expanded = np.expand_dims(Pretrain_Dataset_Eval_REF,axis=-1).astype('float32')
         Pretrain_Dataset_Eval_IMI_Expanded = np.expand_dims(Pretrain_Dataset_Eval_IMI,axis=-1).astype('float32')
             
-        if mode=='unsupervised':
+        if 'unsupervised' in mode or 'ae' in mode:
 
             embeddings_ref, _, _ = encoder(Pretrain_Dataset_Eval_REF_Expanded)
             embeddings_imi, _, _ = encoder(Pretrain_Dataset_Eval_IMI_Expanded)

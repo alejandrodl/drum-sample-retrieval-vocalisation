@@ -27,14 +27,20 @@ from itertools import permutations, combinations, product
 
 num_iterations = 1
 num_iterations_lr = 10
-modes = ['eng_mfcc_env','unsupervised','RI','KSH','RI_KSH']
+modes = ['eng_mfcc_env','adib','unsupervised','RI','KSH','RI_KSH','unsupervised_bark','RI_bark','KSH_bark','RI_KSH_bark']
 
 # Calculate rankings
 
 rankings = np.zeros((len(modes),num_iterations,14,18))
 
-AP = np.zeros(len(modes))
-REC = np.zeros((len(modes),18))
+AP = np.zeros((len(modes),num_iterations,num_iterations_lr))
+REC = np.zeros((len(modes),num_iterations,num_iterations_lr,18))
+
+mean_ap_mode = np.zeros(len(modes))
+std_ap_mode = np.zeros(len(modes))
+
+mean_rec_mode = np.zeros((len(modes),18))
+std_rec_mode = np.zeros((len(modes),18))
 
 for md in range(len(modes)):
 
@@ -130,29 +136,45 @@ for md in range(len(modes)):
             _average_precision_perc_eng_mean = np.mean(_average_precision_perc_eng)
             _average_precision_perc_eng_std = np.std(_average_precision_perc_eng)
 
-            ap += _average_precision_perc_eng_mean
-            rec += recalls_perc_eng_mean
+            AP[md,it,it_lr] = _average_precision_perc_eng_mean
+            REC[md,it,it_lr] = recalls_perc_eng_mean
         
-    ap = ap/(num_iterations*num_iterations_lr)
-    rec = rec/(num_iterations*num_iterations_lr)
+    mean_ap_mode[md] = np.mean(np.mean(AP[md],axis=0),axis=0)
+    std_ap_mode[md] = np.std(np.mean(AP[md],axis=0),axis=0)
 
-    AP[md] = ap
-    REC[md] = rec
+    mean_rec_mode[md] = np.mean(np.mean(REC[md],axis=0),axis=0)
+    std_rec_mode[md] = np.mean(np.mean(REC[md],axis=0),axis=0)
 
-    print('Average Precision ' + mode + ' ' + str(it) + ': ' + str(ap))
-    print('Recall at Rank ' + mode + ' ' + str(it) + ': ' + str(rec))
+    print('Average Precision ' + mode + ' ' + str(it) + ': ' + str(mean_ap_mode[md]))
+    print('Recall at Rank ' + mode + ' ' + str(it) + ': ' + str(mean_rec_mode[md]))
     print('')
 
+
+print('')
+print(mean_ap_mode)
+print('')
+print(std_ap_mode)
+print('')
+print('')
+for md in range(len(modes)):
+    print(mean_rec_mode[md])
+    print('')
+    print(std_rec_mode[md])
+    print('')
 
 plt.rc('grid', linestyle="-", color='grey')
 plt.rcParams['axes.axisbelow'] = True
 plt.figure(figsize=(8,6))
 plt.title('Mean Recall at Rank Performance', fontsize=18)
-plt.scatter(np.arange(18)+1,REC[0],marker='D',edgecolor='black',s=150,c='grey',label='MFCC + Env')
-plt.scatter(np.arange(18)+1,REC[1],marker='D',edgecolor='black',s=150,c='black',label='Unsupervised')
-plt.scatter(np.arange(18)+1,REC[2],marker='D',edgecolor='black',s=150,c='blue',label='RI')
-plt.scatter(np.arange(18)+1,REC[3],marker='D',edgecolor='black',s=150,c='red',label='KSH')
-plt.scatter(np.arange(18)+1,REC[4],marker='D',edgecolor='black',s=150,c='green',label='RI_KSH')
+plt.scatter(np.arange(18)+1,mean_rec_mode[0],marker='D',edgecolor='black',s=150,c='grey',label='MFCC + Env')
+plt.scatter(np.arange(18)+1,mean_rec_mode[1],marker='D',edgecolor='black',s=150,c='black',label='Unsupervised')
+plt.scatter(np.arange(18)+1,mean_rec_mode[2],marker='D',edgecolor='black',s=150,c='yellow',label='Adib')
+plt.scatter(np.arange(18)+1,mean_rec_mode[3],marker='D',edgecolor='black',s=150,c='cyan',label='RI')
+plt.scatter(np.arange(18)+1,mean_rec_mode[4],marker='D',edgecolor='black',s=150,c='orange',label='KSH')
+plt.scatter(np.arange(18)+1,mean_rec_mode[5],marker='D',edgecolor='black',s=150,c='lime',label='RI_KSH')
+plt.scatter(np.arange(18)+1,mean_rec_mode[6],marker='D',edgecolor='black',s=150,c='blue',label='RI_bark')
+plt.scatter(np.arange(18)+1,mean_rec_mode[7],marker='D',edgecolor='black',s=150,c='red',label='KSH_bark')
+plt.scatter(np.arange(18)+1,mean_rec_mode[8],marker='D',edgecolor='black',s=150,c='green',label='RI_KSH_bark')
 plt.yticks(fontsize=12)
 plt.xticks(np.arange(1, 19, 1), fontsize=12)
 plt.xlabel('n', fontsize=16)
