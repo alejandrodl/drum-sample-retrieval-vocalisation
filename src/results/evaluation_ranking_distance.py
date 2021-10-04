@@ -2,11 +2,11 @@
 # coding: utf-8
 
 
-
 import os
 import csv
 import pdb
 import librosa
+import ml_metrics
 import numpy as np
 import scipy as sp
 import soundfile as sf
@@ -26,11 +26,12 @@ from itertools import permutations, combinations, product
 # Parameters
 
 num_iterations = 1
-modes = ['unsupervised','RI','KSH','RI_KSH']
+modes = ['eng_mfcc_env','adib','unsupervised','RI','KSH','RI_KSH','unsupervised_bark','RI_bark','KSH_bark','RI_KSH_bark']
 
 # Calculate rankings
 
 rankings = np.zeros((len(modes),num_iterations,14,18))
+rankings_raw = np.zeros((len(modes),num_iterations,14,18))
 
 for md in range(len(modes)):
 
@@ -39,9 +40,21 @@ for md in range(len(modes)):
     for it in range(num_iterations):
 
         # Load Embeddings
+        if mode=='eng_mfcc_env':
+            embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_MFCC_ENV.npy')
+            embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_MFCC_ENV.npy')
+        else:
+            embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
+            embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
 
-        embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
-        embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
+        if mode=='eng_mfcc_env':
+            embeddings_all = np.vstack((embeddings_ref,embeddings_imi_pre))
+            for n in range(embeddings_ref.shape[1]):
+                mean = np.mean(embeddings_all[:,n])
+                std = np.std(embeddings_all[:,n])
+                embeddings_ref[:,n] = (embeddings_ref[:,n]-mean)/(std+1e-16)
+                embeddings_imi_pre[:,n] = (embeddings_imi_pre[:,n]-mean)/(std+1e-16)
+
         embeddings_imi = []
         for n in range(13):
             embeddings_imi.append(embeddings_imi_pre[n*18:(n+1)*18])
@@ -61,8 +74,8 @@ for md in range(len(modes)):
                     embeddings_ref_sample = embeddings_ref[j]
                     embeddings_imi_sample = embeddings_imi[i,k]
 
-                    embeddings_ref_sample = np.linalg.norm(embeddings_ref_sample)
-                    embeddings_imi_sample = np.linalg.norm(embeddings_imi_sample)
+                    #embeddings_ref_sample = np.linalg.norm(embeddings_ref_sample)
+                    #embeddings_imi_sample = np.linalg.norm(embeddings_imi_sample)
 
                     distances[i,j,k] = euclidean(embeddings_ref_sample, embeddings_imi_sample)
 
@@ -72,11 +85,19 @@ for md in range(len(modes)):
 
             for j in range(18):
 
-                rankings[md,it,i,j] = np.where(np.argsort(distances[i,j])==j)[0][0]
+                rankings_raw = np.argsort(distances[i,j])
+                rankings[md,it,i,j] = np.where(rankings_raw==j)[0][0]
+
+# Calculate average precision
+
+average_precisions = np.zeros(len(modes))
+for md in range(len(modes)):
+    average_precisions[md] = np.mean(np.reciprocal(rankings[md]+1))
+    print('Average Precision ' + modes[md] + ': ' + str(average_precisions[md]))
 
 # Plot ranking curve
 
-colours = ['black','blue','red','green']
+colours = ['purple','yellow','grey','cyan','orange','lime','black','blue','red','green']
 
 plt.figure()
 
@@ -101,6 +122,7 @@ for md in range(len(modes)):
 
 plt.legend()
 plt.show()
+
 
 
 
