@@ -105,7 +105,7 @@ class LearningRateSchedulerCustom(keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -253,7 +253,7 @@ print('Normalising data...')
 
 print('Normalise')
 
-all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI))
+all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI)).astype('float32')
 
 min_data = np.min(all_datasets)
 max_data = np.max(all_datasets)
@@ -263,7 +263,7 @@ Pretrain_Dataset_IMI = (Pretrain_Dataset_IMI-min_data)/(max_data-min_data+1e-16)
 Pretrain_Dataset_Eval_REF = np.clip((Pretrain_Dataset_Eval_REF-min_data)/(max_data-min_data+1e-16),0,1)
 Pretrain_Dataset_Eval_IMI = np.clip((Pretrain_Dataset_Eval_IMI-min_data)/(max_data-min_data+1e-16),0,1)
 
-Pretrain_Dataset = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI)).astype('float32')
+Pretrain_Dataset = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI)).astype('float32').astype('float32')
 
 print('Done.')
 
@@ -462,7 +462,7 @@ for m in range(len(modes)):
 
     if 'unsupervised' in mode:
 
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=0)
         for train_index, test_index in sss.split(Pretrain_Dataset, Pretrain_Classes):
             pretrain_dataset_train, pretrain_dataset_test = Pretrain_Dataset[train_index], Pretrain_Dataset[test_index]
             pretrain_classes_train, pretrain_classes_test = Pretrain_Classes[train_index], Pretrain_Classes[test_index]
@@ -473,7 +473,7 @@ for m in range(len(modes)):
         for n in range(Pretrain_Dataset.shape[0]):
             Pretrain_Classes_OneHot[n,int(Pretrain_Classes[n])] = 1
 
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=0)
         for train_index, test_index in sss.split(Pretrain_Dataset, Pretrain_Classes):
             pretrain_dataset_train, pretrain_dataset_test = Pretrain_Dataset[train_index], Pretrain_Dataset[test_index]
             pretrain_classes_train, pretrain_classes_test = Pretrain_Classes_OneHot[train_index], Pretrain_Classes_OneHot[test_index]
@@ -493,7 +493,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(num_iterations):
+    for it in range(1,3):
 
         print('\n')
         print('Iteration ' + str(it))
@@ -607,32 +607,47 @@ for m in range(len(modes)):
             encoder_input = keras.Input(shape=(128, 128, 1))
             encoder_class = Input(shape=(num_classes,))
 
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(encoder_input)
-            #x = layers.BatchNormalization()(x)
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
+            x = layers.Conv2D(filters=1, kernel_size=(3,5), strides=(1,1), activation=None, padding='same')(encoder_input)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
+            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
-            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
+            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
-            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
+            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
-            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            #x = layers.BatchNormalization()(x)
+            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Dropout(0.3)(x)
+            x = layers.Flatten()(x)
+            #x = layers.Dropout(0.3)(x)
+            #x = layers.Dense(64, activation="relu")(x)
 
             n_x_conv = x.shape
             x = Flatten()(x)
@@ -668,17 +683,30 @@ for m in range(len(modes)):
             dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
             decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same', activation='relu')(dec)'''
 
-            #dec = Dense(latent_dim, activation='relu')(decoder_input)
-            #dec = layers.Dropout(0.5)(decoder_input)
-            dec = Dense(128, activation='relu')(decoder_input)
-            #dec = layers.Dropout(0.5)(dec)
-            dec = Dense(n_x_flattened, activation='relu')(dec)
-            dec = Reshape(tuple(n_x_conv[1:]))(dec)
-            dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=16, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=8, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
-            decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
+            ##dec = Dense(latent_dim, activation='relu')(decoder_input)
+            ##dec = layers.Dropout(0.5)(decoder_input)
+            #dec = Dense(128, activation='relu')(decoder_input)
+            ##dec = layers.Dropout(0.5)(dec)
+            #dec = Dense(n_x_flattened, activation='relu')(dec)
+            #dec = Reshape(tuple(n_x_conv[1:]))(dec)
+            dec = layers.Dense(units=4*4*128, activation="relu")(decoder_input)
+            dec = layers.Reshape(target_shape=(4,4,128))(dec)
+            dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            decoder_outputs = layers.Conv2DTranspose(1, (3,5), activation="relu", padding="same")(dec)
 
             #decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(dec)
 
@@ -723,10 +751,23 @@ for m in range(len(modes)):
 
             cb = [tb_cb, es_cb, lr_cb]'''
 
+            dataset_train = tf.data.Dataset.from_tensor_slices(({"input_1": pretrain_dataset_train, "input_2": pretrain_classes_train}))
+            dataset_train = dataset_train.batch(batch_size, drop_remainder=True)
+
+            dataset_test = tf.data.Dataset.from_tensor_slices(({"input_1": pretrain_dataset_test, "input_2": pretrain_classes_test}))
+            dataset_test = dataset_test.batch(batch_size, drop_remainder=True)
+            
+            checkpoint_path = "cp_" + mode + "_" + str(it) + ".ckpt"
+            checkpoint_dir = os.path.dirname(checkpoint_path+".index")
+            cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+
+            if os.path.isfile(checkpoint_path):
+                model.load_weights(checkpoint_path)
+
             with tf.device(gpu_name):
 
                 #model.compile(optimizer=optimizer)
-                history = model.fit([pretrain_dataset_train,pretrain_classes_train], batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=([pretrain_dataset_test,pretrain_classes_test], None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                history = model.fit(dataset_train, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5),cp_callback], shuffle=True, validation_data=(dataset_test, None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
                 #history = model.fit([pretrain_dataset_train,pretrain_classes_train], validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(7),LearningRateSchedulerCustom(3)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')

@@ -105,7 +105,7 @@ class LearningRateSchedulerCustom(keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -550,25 +550,47 @@ for m in range(len(modes)):
 
             encoder_input = keras.Input(shape=(128, 128, 1))
 
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(encoder_input)
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+            x = layers.Conv2D(filters=1, kernel_size=(3,5), strides=(1,1), activation=None, padding='same')(encoder_input)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters=128, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
             x = layers.Flatten()(x)
             #x = layers.Dropout(0.3)(x)
             #x = layers.Dense(64, activation="relu")(x)
-            x = layers.Dropout(0.3)(x)
 
             z = layers.Dense(latent_dim, name="z")(x)
 
@@ -582,12 +604,22 @@ for m in range(len(modes)):
             dec = layers.Dense(units=4*4*128, activation="relu")(latent_inputs)
             #x = layers.Dropout(0.5)(x)
             dec = layers.Reshape(target_shape=(4,4,128))(dec)
-            dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=8, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
-            dec = layers.Conv2DTranspose(filters=1, kernel_size=5, strides=2, padding='same', activation='relu')(dec)
-            decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=1, padding="same", activation="relu")(dec)
+            dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            decoder_outputs = layers.Conv2DTranspose(1, (3,5), activation="relu", padding="same")(dec)
 
             decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
 
@@ -623,9 +655,18 @@ for m in range(len(modes)):
 
             cb = [tb_cb, es_cb, lr_cb]
 
+            dataset_train = tf.data.Dataset.from_tensor_slices(pretrain_dataset_train)
+            dataset_train = dataset_train.batch(batch_size, drop_remainder=True)
+
+            dataset_test = tf.data.Dataset.from_tensor_slices(pretrain_dataset_test)
+            dataset_test = dataset_test.batch(batch_size, drop_remainder=True)
+
             with tf.device(gpu_name):
 
-                history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=(pretrain_dataset_test,None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                history = model.fit(dataset_train, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5)], shuffle=True, validation_data=(dataset_test,None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                #model.compile(optimizer=optimizer)
+                #history = model.fit(pretrain_dataset_train, validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                #history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test, None), callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         else:
 

@@ -292,7 +292,7 @@ Accuracies = np.zeros(len(header_list[7:]))
 
 for i in range(len(header_list[7:])):
     
-    name = header_list[7+i]
+    name = modes[i]
     
     ci_ubs = np.zeros(18)
     
@@ -315,7 +315,7 @@ for i in range(len(header_list[7:])):
         
     Accuracies[i] = 100*(len(ci_ubs[ci_ubs<0])/18)
     
-    print(name + ' -> ' + str(Accuracies[i]))
+    print('Percentage of Significant Regression Slopes ' + name + ': ' + str(Accuracies[i]))
 
 
 

@@ -265,7 +265,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(num_iterations):
+    for it in range(1,3):
 
         print('\n')
         print('Iteration ' + str(it))
@@ -380,11 +380,18 @@ for m in range(len(modes)):
             #print(x_batch_train.shape)
             #print(y_batch_train.shape)
 
+        checkpoint_path = "cp_" + mode + ".ckpt"
+        checkpoint_dir = os.path.dirname(checkpoint_path)
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+
+        if os.path.isfile(checkpoint_path+".index"):
+            model.load_weights(checkpoint_path)
+
         with tf.device(gpu_name):
 
             #model.compile(optimizer=optimizer)
             #history = model.fit(training_generator, steps_per_epoch=steps_per_epoch, validation_data=validation_generator, epochs=epochs, callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
-            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0),LearningRateSchedulerCustom(5)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0),LearningRateSchedulerCustom(5),cp_callback], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
             #history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test, None), callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')

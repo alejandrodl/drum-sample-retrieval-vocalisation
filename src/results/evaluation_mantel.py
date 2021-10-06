@@ -61,19 +61,38 @@ for md in range(len(modes)):
                         distance_matrices_ref[md,it,emb,j,k] = euclidean(embeddings_ref[j,emb], embeddings_ref[k,emb])
                         distance_matrices_imi[md,it,i,emb,j,k] = euclidean(embeddings_imi[i,j,emb], embeddings_imi[i,k,emb])
 
-# Calculate mean Mantel scores
+# Perform Mantel test
 
-mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim))
-p_values = np.zeros((len(modes),num_iterations,14,latent_dim))
+num_tests = 10
+
+mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim,num_iterations))
+p_values = np.zeros((len(modes),num_iterations,14,latent_dim,num_iterations))
+
+print('Performing tests...')
 
 for md in range(len(modes)):
     mode = modes[md]
     for it in range(num_iterations):
         for i in range(14):
-            print([mode,i])
             for emb in range(latent_dim):
-                score, p_value, _ = mantel(distance_matrices_ref[md,it,emb],distance_matrices_imi[md,it,i,emb])
-                mantel_scores[md,it,i,emb] = score
-                p_values[md,it,i,emb] = p_value
+                for t in range(num_tests):
+                    score, p_value, _ = mantel(distance_matrices_ref[md,it,emb],distance_matrices_imi[md,it,i,emb])
+                    mantel_scores[md,it,i,emb,t] = score
+                    p_values[md,it,i,emb,t] = p_value
     np.save('results/mantel_scores', mantel_scores)
     np.save('results/p_values', p_values)
+    print('Done for ' + mode)
+
+# Calculate percentage of significant Mantel scores per participant
+
+for md in range(len(modes)):
+    print('Percentage of Significant Mantel Scores ' + modes[md] + ': ' + str((p_values[md]<0.05).sum()/p_values[md].size))
+
+'''# Plot user differences
+
+p_values = np.load('results/p_values.npy')
+
+for md in range(len(modes)):
+    plt.figure()
+    plt.imshow(p_values[md,0])
+    plt.show()'''
