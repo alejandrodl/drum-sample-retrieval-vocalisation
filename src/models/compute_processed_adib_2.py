@@ -112,7 +112,7 @@ class LearningRateSchedulerCustom(keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -186,10 +186,10 @@ Pretrain_Classes = np.load('../../data/interim/Classes_Bark.npy')
 
 print('VIPS')
 
-Pretrain_Dataset_Eval_REF = np.load('../../data/interim/Dataset_VIPS_Ref_Bark.npy')
+Pretrain_Dataset_Eval_REF = np.load('../../data/interim/Dataset_VIPS_Ref_Bark_Adib.npy')
 Pretrain_Classes_Eval_REF = np.load('../../data/interim/Classes_VIPS_Ref.npy')
 
-Pretrain_Dataset_Eval_IMI = np.load('../../data/interim/Dataset_VIPS_Imi_Bark.npy')
+Pretrain_Dataset_Eval_IMI = np.load('../../data/interim/Dataset_VIPS_Imi_Bark_Adib.npy')
 Pretrain_Classes_Eval_IMI = np.load('../../data/interim/Classes_VIPS_Imi.npy')
 
 print('Done.')
@@ -265,7 +265,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(1,3):
+    for it in range(1,5):
 
         print('\n')
         print('Iteration ' + str(it))
@@ -380,7 +380,7 @@ for m in range(len(modes)):
             #print(x_batch_train.shape)
             #print(y_batch_train.shape)
 
-        checkpoint_path = "cp_" + mode + ".ckpt"
+        checkpoint_path = "checkpoints_adib/cp_" + mode + "_" + str(it) + ".ckpt"
         checkpoint_dir = os.path.dirname(checkpoint_path)
         cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
@@ -391,7 +391,7 @@ for m in range(len(modes)):
 
             #model.compile(optimizer=optimizer)
             #history = model.fit(training_generator, steps_per_epoch=steps_per_epoch, validation_data=validation_generator, epochs=epochs, callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
-            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0),LearningRateSchedulerCustom(5),cp_callback], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.001),LearningRateSchedulerCustom(5),cp_callback], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
             #history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test, None), callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')

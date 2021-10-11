@@ -190,132 +190,137 @@ Matrix_All[:,7] = Duplicate
 
 # Compute distances
 
-f = open('results/LMER_Dataset.csv','w')
+num_iterations = 1
+Accuracies = np.zeros((len(header_list[7:]),num_iterations))
 
-string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,tim,adib,vae,cvae1,cvae2,cvae3,vaeb,cvae1b,cvae2b,cvae3b'
-f.write(string_head)
-f.write('\n')
+for it in range(num_iterations):
 
-modes = ['eng_mfcc_env','adib','unsupervised','RI','KSH','RI_KSH','unsupervised_bark','RI_bark','KSH_bark','RI_KSH_bark']
+    f = open('results/LMER_Dataset_' + str(it) + '.csv','w')
 
-for md in range(len(modes)):
+    string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,tim,adib,vae,cvae1,cvae2,cvae3,vaeb,cvae1b,cvae2b,cvae3b'
+    f.write(string_head)
+    f.write('\n')
 
-    mode = modes[md]
+    modes = ['eng_mfcc_env','adib','unsupervised','RI','KSH','RI_KSH','unsupervised_bark','RI_bark','KSH_bark','RI_KSH_bark']
 
-    # Load Embeddings
-    if mode=='eng_mfcc_env':
-        embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_MFCC_ENV.npy')
-        embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_MFCC_ENV.npy')
-    else:
-        embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_0.npy')
-        embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_0.npy')
+    for md in range(len(modes)):
 
-    if mode=='eng_mfcc_env':
-        embeddings_all = np.vstack((embeddings_ref,embeddings_imi_pre))
-        for n in range(embeddings_ref.shape[1]):
-            mean = np.mean(embeddings_all[:,n])
-            std = np.std(embeddings_all[:,n])
-            embeddings_ref[:,n] = (embeddings_ref[:,n]-mean)/(std+1e-16)
-            embeddings_imi_pre[:,n] = (embeddings_imi_pre[:,n]-mean)/(std+1e-16)
+        mode = modes[md]
 
-    embeddings_imi = []
-    for n in range(13):
-        embeddings_imi.append(embeddings_imi_pre[n*18:(n+1)*18])
-    embeddings_imi.append(embeddings_imi_pre[(n+1)*18:])
-    embeddings_imi = np.array(embeddings_imi)
-
-    for n in range(len(Listener)):
-
-        embeddings_1 = embeddings_ref[int(Sound[n])]
-        embeddings_2 = embeddings_imi[int(Imitator[n]),int(Imitation[n])]
-
-        Matrix_All[n,8+md] = euclidean(embeddings_1, embeddings_2)
-
-    Matrix_All[:,8+md] = (Matrix_All[:,8+md]-np.min(Matrix_All[:,8+md]))/(np.max(Matrix_All[:,8+md])-np.min(Matrix_All[:,8+md])+1e-16)
-    #Matrix_All[:,8+md] = (Matrix_All[:,8+md]-np.mean(Matrix_All[:,8+md]))/(np.std(Matrix_All[:,8+md])+1e-16)
-    
-# Save to CSV file
-    
-for i in range(Matrix_All.shape[0]):
-    string = ''
-    for j in range(Matrix_All.shape[1]):
-        if j!=0:
-            if j!=Matrix_All.shape[1]-1:
-                string += str(Matrix_All[i,j])+','
-            else:
-                string += str(Matrix_All[i,j])
+        # Load Embeddings
+        if mode=='eng_mfcc_env':
+            embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_MFCC_ENV.npy')
+            embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_MFCC_ENV.npy')
         else:
-            if j!=Matrix_All.shape[1]-1:
-                string += str(int(Matrix_All[i,j]))+','
-            else:
-                string += str(int(Matrix_All[i,j]))
-    f.write(string)
-    if i!=Matrix_All.shape[0]-1:
-        f.write('\n')
-f.close()
+            embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
+            embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
 
+        if mode=='eng_mfcc_env':
+            embeddings_all = np.vstack((embeddings_ref,embeddings_imi_pre))
+            for n in range(embeddings_ref.shape[1]):
+                mean = np.mean(embeddings_all[:,n])
+                std = np.std(embeddings_all[:,n])
+                embeddings_ref[:,n] = (embeddings_ref[:,n]-mean)/(std+1e-16)
+                embeddings_imi_pre[:,n] = (embeddings_imi_pre[:,n]-mean)/(std+1e-16)
 
+        embeddings_imi = []
+        for n in range(13):
+            embeddings_imi.append(embeddings_imi_pre[n*18:(n+1)*18])
+        embeddings_imi.append(embeddings_imi_pre[(n+1)*18:])
+        embeddings_imi = np.array(embeddings_imi)
 
+        for n in range(len(Listener)):
 
-### Calculate accuracy
+            embeddings_1 = embeddings_ref[int(Sound[n])]
+            embeddings_2 = embeddings_imi[int(Imitator[n]),int(Imitation[n])]
 
-string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,tim,adib,vae,cvae1,cvae2,cvae3,vaeb,cvae1b,cvae2b,cvae3b'
-string_head = string_head[1:]
+            Matrix_All[n,8+md] = euclidean(embeddings_1, embeddings_2)
+
+        Matrix_All[:,8+md] = (Matrix_All[:,8+md]-np.min(Matrix_All[:,8+md]))/(np.max(Matrix_All[:,8+md])-np.min(Matrix_All[:,8+md])+1e-16)
+        #Matrix_All[:,8+md] = (Matrix_All[:,8+md]-np.mean(Matrix_All[:,8+md]))/(np.std(Matrix_All[:,8+md])+1e-16)
         
-header_list = []
-c = 0
-for n in range(len(string_head)):
-    if string_head[n]==',':
-        header_list.append(string_head[c:n])
-        c = n+1
-header_list.append(string_head[c:])
+    # Save to CSV file
+        
+    for i in range(Matrix_All.shape[0]):
+        string = ''
+        for j in range(Matrix_All.shape[1]):
+            if j!=0:
+                if j!=Matrix_All.shape[1]-1:
+                    string += str(Matrix_All[i,j])+','
+                else:
+                    string += str(Matrix_All[i,j])
+            else:
+                if j!=Matrix_All.shape[1]-1:
+                    string += str(int(Matrix_All[i,j]))+','
+                else:
+                    string += str(int(Matrix_All[i,j]))
+        f.write(string)
+        if i!=Matrix_All.shape[0]-1:
+            f.write('\n')
+    f.close()
 
-string_r = ''
-for n in range(len(header_list)):
-    string_r += '"' + header_list[n] + '",'
-string_r = string_r[87:-1]
 
-# Regression
 
-indices_sounds = []
-for i in range(18):
-    idxs = []
-    for j in range(len(Sound)):
-        if Sound[j]==i:
-            idxs.append(j)
-    indices_sounds.append(idxs)
 
-Slopes = np.zeros((len(header_list[7:]),18))
-CIs_95 = np.zeros((len(header_list[7:]),18))
-CIs_99 = np.zeros((len(header_list[7:]),18))
-Accuracies = np.zeros(len(header_list[7:]))
+    ### Calculate accuracy
+
+    string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,tim,adib,vae,cvae1,cvae2,cvae3,vaeb,cvae1b,cvae2b,cvae3b'
+    string_head = string_head[1:]
+            
+    header_list = []
+    c = 0
+    for n in range(len(string_head)):
+        if string_head[n]==',':
+            header_list.append(string_head[c:n])
+            c = n+1
+    header_list.append(string_head[c:])
+
+    string_r = ''
+    for n in range(len(header_list)):
+        string_r += '"' + header_list[n] + '",'
+    string_r = string_r[87:-1]
+
+    # Regression
+
+    indices_sounds = []
+    for i in range(18):
+        idxs = []
+        for j in range(len(Sound)):
+            if Sound[j]==i:
+                idxs.append(j)
+        indices_sounds.append(idxs)
+
+    Slopes = np.zeros((len(header_list[7:]),18))
+    CIs_95 = np.zeros((len(header_list[7:]),18))
+    CIs_99 = np.zeros((len(header_list[7:]),18))
+
+    for i in range(len(header_list[7:])):
+        
+        name = modes[i]
+        
+        ci_ubs = np.zeros(18)
+        
+        for j in range(18):
+            
+            idxs = indices_sounds[j]
+            
+            x = Matrix_All[:,8+i]
+            y = Matrix_All[:,6]
+            
+            x = np.array(x[idxs])
+            y = np.array(y[idxs])
+            
+            Slopes[i,j], intercept, r, p, std_err = linregress(x, y)
+            
+            CIs_95[i,j] = 1.96*std_err
+            CIs_99[i,j] = 2.58*std_err
+            
+            ci_ubs[j] = Slopes[i,j] + CIs_95[i,j]
+            
+        Accuracies[i,it] = 100*(len(ci_ubs[ci_ubs<0])/18)
 
 for i in range(len(header_list[7:])):
-    
-    name = modes[i]
-    
-    ci_ubs = np.zeros(18)
-    
-    for j in range(18):
-        
-        idxs = indices_sounds[j]
-        
-        x = Matrix_All[:,8+i]
-        y = Matrix_All[:,6]
-        
-        x = np.array(x[idxs])
-        y = np.array(y[idxs])
-        
-        Slopes[i,j], intercept, r, p, std_err = linregress(x, y)
-        
-        CIs_95[i,j] = 1.96*std_err
-        CIs_99[i,j] = 2.58*std_err
-        
-        ci_ubs[j] = Slopes[i,j] + CIs_95[i,j]
-        
-    Accuracies[i] = 100*(len(ci_ubs[ci_ubs<0])/18)
-    
-    print('Percentage of Significant Regression Slopes ' + name + ': ' + str(Accuracies[i]))
+    print('Percentage of Significant Regression Slopes ' + modes[i] + ': ' + str(np.mean(Accuracies[i],axis=-1)))
 
 
 

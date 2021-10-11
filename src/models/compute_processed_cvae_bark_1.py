@@ -105,7 +105,7 @@ class LearningRateSchedulerCustom(keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -493,7 +493,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(1,3):
+    for it in range(1,5):
 
         print('\n')
         print('Iteration ' + str(it))
@@ -694,16 +694,31 @@ for m in range(len(modes)):
             dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=1, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
             dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=1, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
             dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=1, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
             dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=1, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
             dec = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=1, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
             decoder_outputs = layers.Conv2DTranspose(1, (3,5), activation="relu", padding="same")(dec)
@@ -757,7 +772,7 @@ for m in range(len(modes)):
             dataset_test = tf.data.Dataset.from_tensor_slices(({"input_1": pretrain_dataset_test, "input_2": pretrain_classes_test}))
             dataset_test = dataset_test.batch(batch_size, drop_remainder=True)
 
-            checkpoint_path = "cp_" + mode + "_" + str(it) + ".ckpt"
+            checkpoint_path = "2cp_" + mode + "_" + str(it) + ".ckpt"
             checkpoint_dir = os.path.dirname(checkpoint_path)
             cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
@@ -767,7 +782,7 @@ for m in range(len(modes)):
             with tf.device(gpu_name):
 
                 #model.compile(optimizer=optimizer)
-                history = model.fit(dataset_train, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5),cp_callback], shuffle=True, validation_data=(dataset_test, None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                history = model.fit(dataset_train, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.15),LearningRateSchedulerCustom(5),cp_callback], shuffle=True, validation_data=(dataset_test, None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
                 #history = model.fit([pretrain_dataset_train,pretrain_classes_train], validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(7),LearningRateSchedulerCustom(3)], shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')

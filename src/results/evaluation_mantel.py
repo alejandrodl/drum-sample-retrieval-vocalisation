@@ -10,10 +10,10 @@ from skbio.stats.distance import mantel
 
 # Parameters
 
-latent_dim = 16
+latent_dim = 32
 
 num_iterations = 1
-modes = ['eng_mfcc_env','adib','unsupervised','RI','KSH','RI_KSH','unsupervised_bark','RI_bark','KSH_bark','RI_KSH_bark']
+modes = ['eng_mfcc_env','adib','unsupervised','RI','KSH','RI_KSH']
 
 # Build distance matrices
 
@@ -63,10 +63,10 @@ for md in range(len(modes)):
 
 # Perform Mantel test
 
-num_tests = 10
+num_tests = 5
 
-mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim,num_iterations))
-p_values = np.zeros((len(modes),num_iterations,14,latent_dim,num_iterations))
+mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
+p_values = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
 
 print('Performing tests...')
 
@@ -88,11 +88,27 @@ for md in range(len(modes)):
 for md in range(len(modes)):
     print('Percentage of Significant Mantel Scores ' + modes[md] + ': ' + str((p_values[md]<0.05).sum()/p_values[md].size))
 
-'''# Plot user differences
+'''
+# Plot user differences
 
 p_values = np.load('results/p_values.npy')
+p_values_mean = np.mean(p_values,axis=-1)
+
+plt.figure()
+plt.imshow(p_values_mean[5,0])
+plt.show()
 
 for md in range(len(modes)):
     plt.figure()
-    plt.imshow(p_values[md,0])
-    plt.show()'''
+    plt.imshow(p_values_mean[md,0])
+    plt.show()
+
+for md in range(len(modes)):
+    matrix = p_values_mean[md,0]
+    corr_agg = 0
+    for i in range(matrix.shape[1]):
+        for j in range(matrix.shape[1]):
+            corr, _ = sp.stats.pearsonr(matrix[:,i], matrix[:,j])
+            corr_agg += corr
+    print('Mean Pearson Correlation for ' + modes[md] + ': ' + str(corr_agg/(matrix.shape[1]**2)))
+'''

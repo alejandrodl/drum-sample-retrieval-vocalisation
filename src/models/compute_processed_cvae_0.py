@@ -155,7 +155,7 @@ percentage_train = 80
 
 epochs = 10000
 
-batch_size = 512
+batch_size = 256
 #latent_dim = 16
 
 #num_crossval = 5
@@ -517,7 +517,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(1,3):
+    for it in range(5):
 
         print('\n')
         print('Iteration ' + str(it))
@@ -536,20 +536,17 @@ for m in range(len(modes)):
 
             encoder_input = keras.Input(shape=(128, 128, 1))
 
-            x = layers.Conv2D(filters=1, kernel_size=(3,5), strides=(1,1), activation=None, padding='same')(encoder_input)
+            x = layers.Conv2D(filters=8, kernel_size=(7,7), strides=(1,1), activation=None, padding='same')(encoder_input)
             x = layers.BatchNormalization()(x)
             x = layers.ReLU()(x)
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
-            x = layers.BatchNormalization()(x)
-            x = layers.ReLU()(x)
-            x = layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.Conv2D(filters=8, kernel_size=(7,7), strides=(1,1), activation=None, padding='same')(x)
             x = layers.BatchNormalization()(x)
             x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.Conv2D(filters=16, kernel_size=(5,5), strides=(1,1), activation=None, padding='same')(x)
             x = layers.BatchNormalization()(x)
             x = layers.ReLU()(x)
-            x = layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation=None, padding='same')(x)
+            x = layers.Conv2D(filters=16, kernel_size=(5,5), strides=(1,1), activation=None, padding='same')(x)
             x = layers.BatchNormalization()(x)
             x = layers.ReLU()(x)
             x = layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
@@ -596,19 +593,31 @@ for m in range(len(modes)):
             dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=64, kernel_size=3, strides=1, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
             dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=32, kernel_size=3, strides=1, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
             dec = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=2, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
-            dec = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.Conv2DTranspose(filters=16, kernel_size=5, strides=1, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
-            dec = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=2, padding='same', activation=None)(dec)
+            dec = layers.Conv2DTranspose(filters=8, kernel_size=5, strides=2, padding='same', activation=None)(dec)
             dec = layers.BatchNormalization()(dec)
             dec = layers.ReLU()(dec)
-            decoder_outputs = layers.Conv2DTranspose(1, (3,5), activation="relu", padding="same")(dec)
+            dec = layers.Conv2DTranspose(filters=8, kernel_size=5, strides=1, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            dec = layers.Conv2DTranspose(filters=1, kernel_size=5, strides=2, padding='same', activation=None)(dec)
+            dec = layers.BatchNormalization()(dec)
+            dec = layers.ReLU()(dec)
+            decoder_outputs = layers.Conv2DTranspose(filters=1, kernel_size=3, strides=1, padding='same', activation="relu")(dec)
 
             decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
 
@@ -654,7 +663,7 @@ for m in range(len(modes)):
             dataset_test = tf.data.Dataset.from_tensor_slices(pretrain_dataset_test)
             dataset_test = dataset_test.batch(batch_size, drop_remainder=True)
 
-            checkpoint_path = "cp_" + mode + "_" + str(it) + ".ckpt"
+            checkpoint_path = "checkpoints_cvae_0/cp_" + mode + "_" + str(it) + ".ckpt"
             checkpoint_dir = os.path.dirname(checkpoint_path)
             cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
@@ -666,7 +675,7 @@ for m in range(len(modes)):
                 #model.compile(optimizer=optimizer)
                 #history = model.fit(pretrain_dataset_train, validation_split=0.20, batch_size=batch_size, epochs=epochs, callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
                 #history = model.fit(pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test, None), callbacks=cb, shuffle=True)  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
-                history = model.fit(dataset_train, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.3),LearningRateSchedulerCustom(5),cp_callback], shuffle=True, validation_data=(dataset_test,None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
+                history = model.fit(dataset_train, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0.005),LearningRateSchedulerCustom(5),cp_callback], shuffle=True, validation_data=(dataset_test,None))  #  , callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0
 
         else:
 
@@ -785,7 +794,7 @@ for m in range(len(modes)):
                 patience=10,
                 restore_best_weights=True)
 
-            lr_cb = ReduceLROnPlateau(
+            lr_cb = ReduceLROnPlateau
                 monitor='val_loss',
                 verbose=True,
                 patience=5)
