@@ -131,4 +131,4 @@ dmypy.json
 # Directories
 data/external
 data/interim
-data/processed
+src/data/bark_env
