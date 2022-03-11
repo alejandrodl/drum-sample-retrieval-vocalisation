@@ -132,3 +132,4 @@ dmypy.json
 data/external
 data/interim
 src/data/bark_env
+.vscode
