@@ -11,92 +11,81 @@ from skbio.stats.distance import mantel
 # Parameters
 
 latent_dim = 32
+load_data_bool = True
 
 num_iterations = 5
 modes = ['Heuristic','CAE-B','CAE','CAE-SL','CAE-DL','CAE-SDL']
 
-# Build distance matrices
+if load_data_bool:
 
-distance_matrices_ref = np.zeros((len(modes),num_iterations,latent_dim,18,18))
-distance_matrices_imi = np.zeros((len(modes),num_iterations,14,latent_dim,18,18))
+    p_values = np.load('results/p_values.npy')
+    for md in range(len(modes)):
+        percentages = np.zeros(num_iterations)
+        for it in range(num_iterations):
+            percentages[it] = (p_values[md,it]<0.05).sum()/p_values[md,it].size
+        mean = np.round(np.mean(percentages),3)
+        ci95 = np.round(np.std(percentages),3)
+        print('MSS ' + modes[md] + ': ' + str(mean) + ' +- ' + str(ci95))
 
-for md in range(len(modes)):
-    mode = modes[md]
+else:
 
-    for it in range(num_iterations):
-        # Load Embeddings
-        if mode=='Heuristic':
-            embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_Heuristic.npy')
-            embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_Heuristic.npy')
-        else:
-            embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
-            embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
+    # Build distance matrices
 
-        if mode=='Heuristic':
-            embeddings_all = np.vstack((embeddings_ref,embeddings_imi_pre))
-            for n in range(embeddings_ref.shape[1]):
-                mean = np.mean(embeddings_all[:,n])
-                std = np.std(embeddings_all[:,n])
-                embeddings_ref[:,n] = (embeddings_ref[:,n]-mean)/(std+1e-16)
-                embeddings_imi_pre[:,n] = (embeddings_imi_pre[:,n]-mean)/(std+1e-16)
+    distance_matrices_ref = np.zeros((len(modes),num_iterations,latent_dim,18,18))
+    distance_matrices_imi = np.zeros((len(modes),num_iterations,14,latent_dim,18,18))
 
-        embeddings_imi = []
-        for n in range(13):
-            embeddings_imi.append(embeddings_imi_pre[n*18:(n+1)*18])
-        embeddings_imi.append(embeddings_imi_pre[(n+1)*18:])
-        embeddings_imi = np.array(embeddings_imi)
+    for md in range(len(modes)):
+        mode = modes[md]
 
-        # Calculate distances
-        for i in range(14):
-            for emb in range(latent_dim):
-                for j in range(18):
-                    for k in range(18):
-                        distance_matrices_ref[md,it,emb,j,k] = euclidean(embeddings_ref[j,emb], embeddings_ref[k,emb])
-                        distance_matrices_imi[md,it,i,emb,j,k] = euclidean(embeddings_imi[i,j,emb], embeddings_imi[i,k,emb])
+        for it in range(num_iterations):
+            # Load Embeddings
+            if mode=='Heuristic':
+                embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_Heuristic.npy')
+                embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_Heuristic.npy')
+            else:
+                embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
+                embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
 
-# Perform Mantel test
+            if mode=='Heuristic':
+                embeddings_all = np.vstack((embeddings_ref,embeddings_imi_pre))
+                for n in range(embeddings_ref.shape[1]):
+                    mean = np.mean(embeddings_all[:,n])
+                    std = np.std(embeddings_all[:,n])
+                    embeddings_ref[:,n] = (embeddings_ref[:,n]-mean)/(std+1e-16)
+                    embeddings_imi_pre[:,n] = (embeddings_imi_pre[:,n]-mean)/(std+1e-16)
 
-num_tests = 5
+            embeddings_imi = []
+            for n in range(13):
+                embeddings_imi.append(embeddings_imi_pre[n*18:(n+1)*18])
+            embeddings_imi.append(embeddings_imi_pre[(n+1)*18:])
+            embeddings_imi = np.array(embeddings_imi)
 
-mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
-p_values = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
+            # Calculate distances
+            for i in range(14):
+                for emb in range(latent_dim):
+                    for j in range(18):
+                        for k in range(18):
+                            distance_matrices_ref[md,it,emb,j,k] = euclidean(embeddings_ref[j,emb], embeddings_ref[k,emb])
+                            distance_matrices_imi[md,it,i,emb,j,k] = euclidean(embeddings_imi[i,j,emb], embeddings_imi[i,k,emb])
 
-print('Performing tests...')
+    # Perform Mantel test
 
-for md in range(len(modes)):
-    mode = modes[md]
-    for it in range(num_iterations):
-        for i in range(14):
-            for emb in range(latent_dim):
-                for t in range(num_tests):
-                    score, p_value, _ = mantel(distance_matrices_ref[md,it,emb],distance_matrices_imi[md,it,i,emb])
-                    mantel_scores[md,it,i,emb,t] = score
-                    p_values[md,it,i,emb,t] = p_value
-    np.save('results/mantel_scores', mantel_scores)
-    np.save('results/p_values', p_values)
-    print('Percentage of Significant Mantel Scores ' + modes[md] + ': ' + str((p_values[md]<0.05).sum()/p_values[md].size))
+    num_tests = 5
 
-'''
-# Plot user differences
+    mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
+    p_values = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
 
-p_values = np.load('results/p_values.npy')
-p_values_mean = np.mean(p_values,axis=-1)
+    print('Performing tests...')
 
-plt.figure()
-plt.imshow(p_values_mean[5,0])
-plt.show()
-
-for md in range(len(modes)):
-    plt.figure()
-    plt.imshow(p_values_mean[md,0])
-    plt.show()
-
-for md in range(len(modes)):
-    matrix = p_values_mean[md,0]
-    corr_agg = 0
-    for i in range(matrix.shape[1]):
-        for j in range(matrix.shape[1]):
-            corr, _ = sp.stats.pearsonr(matrix[:,i], matrix[:,j])
-            corr_agg += corr
-    print('Mean Pearson Correlation for ' + modes[md] + ': ' + str(corr_agg/(matrix.shape[1]**2)))
-'''
+    for md in range(len(modes)):
+        mode = modes[md]
+        for it in range(num_iterations):
+            for i in range(14):
+                for emb in range(latent_dim):
+                    for t in range(num_tests):
+                        score, p_value, _ = mantel(distance_matrices_ref[md,it,emb],distance_matrices_imi[md,it,i,emb])
+                        mantel_scores[md,it,i,emb,t] = score
+                        p_values[md,it,i,emb,t] = p_value
+        np.save('results/mantel_scores', mantel_scores)
+        np.save('results/p_values', p_values)
+        print('Percentage of Significant Mantel Scores ' + modes[md] + ': ' + str((p_values[md]<0.05).sum()/p_values[md].size))

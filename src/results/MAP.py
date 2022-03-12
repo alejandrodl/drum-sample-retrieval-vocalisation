@@ -81,7 +81,9 @@ average_precisions = np.zeros((len(modes),num_iterations))
 for md in range(len(modes)):
     for it in range(num_iterations):
         average_precisions[md,it] = np.mean(np.reciprocal(rankings[md,it]+1))
-    print('Average Precision ' + modes[md] + ': ' + str(np.round(np.mean(average_precisions[md]),3)))
+    mean = np.round(np.mean(average_precisions[md]),3)
+    ci95 = np.round(np.std(average_precisions[md]*(1.96/(num_iterations**(0.5)))),3)
+    print('MAP ' + modes[md] + ': ' + str(mean) + ' +- ' + str(ci95))
 
 # Plot ranking curve
 colours = ['purple','yellow','grey','cyan','orange','lime']

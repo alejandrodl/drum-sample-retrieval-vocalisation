@@ -276,7 +276,7 @@ for it in range(num_iterations):
 
     for i in range(len(header_list[7:])):
         name = modes[i]
-        ci_ubs_95 = np.zeros(18)  
+        ci_ubs_95 = np.zeros(18)
 
         for j in range(18):
             idxs = indices_sounds[j]
@@ -295,9 +295,9 @@ for it in range(num_iterations):
         Accuracies_95[i,it] = 100*(len(ci_ubs_95[ci_ubs_95<0])/18)
 
 for i in range(len(header_list[7:])):
-    print('Percentage of Significant Regression Slopes ' + modes[i] + ': ' + str(np.mean(Accuracies_95[i],axis=-1)))
-
-
+    mean = np.round(np.mean(Accuracies_95[i],axis=-1),1)
+    ci95 = np.round(np.std(Accuracies_95[i],axis=-1)*(1.96/(num_iterations**(0.5))),1)
+    print('Accuracy ' + modes[i] + ': ' + str(mean) + ' +- ' + str(ci95))
 
 
 
