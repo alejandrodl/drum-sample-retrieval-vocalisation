@@ -31,6 +31,7 @@ TODO List
 ---------
 
 - [x] Finish tidying up code
+- Finish commenting code
 - Finish README file
 - Add links
 
