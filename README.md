@@ -9,7 +9,7 @@ by Alejandro Delgado, Charalampos Saitis, Emmanouil Benetos, and Mark Sandler.
 Contents
 --------
 
-- `src` – the main codebase with scripts for processing data, models, and results (details in sections below).
+- `src` – the main codebase with scripts for processing data, models, and results.
 - `data` – datasets and processed data used throughout the study.
 - `models` – folder that hosts already trained models.
 - `results` – folder that hosts information relative to final accuracy results.
