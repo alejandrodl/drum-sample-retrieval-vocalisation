@@ -57,7 +57,7 @@ latent_dim = 32
 epochs = 200
 
 batch_size = 512
-num_iterations = 10
+num_iterations = 5
 
 replacements_0 = {'kd':0,'sd':0,'hhc':0,'hho':0}
 replacements_1 = {'kd':1,'sd':1,'hhc':1,'hho':1}
@@ -196,7 +196,7 @@ for m in range(len(modes)):
 
         print('Training models...')
 
-        for it in range(3,num_iterations):
+        for it in range(num_iterations):
 
             print('\n')
             print('Iteration ' + str(it))

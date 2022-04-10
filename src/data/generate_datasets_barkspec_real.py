@@ -19,7 +19,7 @@ def time_stretch(data, stretch_factor):
 
 
 
-# Helpers
+# Parameters (helpers)
 
 freqs = calc_bark_spaced_cent_freqs(n_bands=128)
 freqs = freqs[1:-1]
@@ -28,18 +28,8 @@ db_diffs = ear_model_basis(freqs=freqs)
 cent_freqs = calc_bark_spaced_cent_freqs(n_bands=128)
 weights =  bark_basis(fs=44100, n_fft=4096, n_bands=128)
 
-
-
 num_spec = 128
 num_frames = 128
-
-
-
-
-
-
-
-
 
 
 # Create Misc Aug Dataset
@@ -51,7 +41,6 @@ Dataset_Str = 'Misc'
 path_audio = '../../data/external/Misc_Dataset'
 
 list_wav = []
-
 for path, subdirs, files in os.walk(path_audio):
     for filename in files:
         if filename.endswith('.wav'):
@@ -61,14 +50,11 @@ list_wav = sorted(list_wav)
 list_wav.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 
 num_cuts = 80
-
 cut_step = len(list_wav)//num_cuts
 
 for cut in range(num_cuts):
-
     start = cut*cut_step
     end = (cut+1)*cut_step
-
     if cut!=num_cuts-1:
         list_wav_cut = list_wav[start:end]
     else:
@@ -81,7 +67,6 @@ for cut in range(num_cuts):
     print(list_wav_cut)
 
     for i in range(len(list_wav_cut)):
-
         print(str(i) + ' of ' + str(len(list_wav_cut)))
 
         audio, fs = sf.read(list_wav_cut[i])
@@ -97,11 +82,9 @@ for cut in range(num_cuts):
             Class = 'hho'
         
         for k in range(9):
-
             kn = np.random.randint(0,2)
             pt = np.random.uniform(low=-1, high=1, size=None)
             st = np.random.uniform(low=0.8, high=1.2, size=None)
-
             if k!=0:
                 if kn==0:
                     audio = pitch_shift(audio_ref, fs, pt)
@@ -111,7 +94,6 @@ for cut in range(num_cuts):
                     audio = pitch_shift(audio, fs, pt)
             else:
                 audio = audio_ref
-
             Spec = Sample(audio,n_fft=4096,hop_size=512,n_bands=128,bark_basis=weights,bark_freqs=cent_freqs,ear_basis=db_diffs,numpy_input=True).bgram
 
             Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))
@@ -155,11 +137,9 @@ np.save('../../data/interim/Classes_Misc', Classes_All)
 print('BFD Aug Dataset')
 
 Dataset_Str = 'BFD'
-
 path_audio = '../../data/external/BFD_Dataset'
 
 list_wav = []
-
 for path, subdirs, files in os.walk(path_audio):
     for filename in files:
         if filename.endswith('.wav'):
@@ -169,11 +149,9 @@ list_wav = sorted(list_wav)
 list_wav.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 
 num_cuts = 20
-
 cut_step = len(list_wav)//num_cuts
 
 for cut in range(num_cuts):
-
     start = cut*cut_step
     end = (cut+1)*cut_step
 
@@ -189,7 +167,6 @@ for cut in range(num_cuts):
     print(list_wav_cut)
 
     for i in range(len(list_wav_cut)):
-
         print(str(i) + ' of ' + str(len(list_wav_cut)))
 
         audio, fs = sf.read(list_wav_cut[i])
@@ -205,11 +182,9 @@ for cut in range(num_cuts):
             Class = 'hho'
         
         for k in range(9):
-
             kn = np.random.randint(0,2)
             pt = np.random.uniform(low=-1, high=1, size=None)
             st = np.random.uniform(low=0.8, high=1.2, size=None)
-
             if k!=0:
                 if kn==0:
                     audio = pitch_shift(audio_ref, fs, pt)
@@ -219,7 +194,6 @@ for cut in range(num_cuts):
                     audio = pitch_shift(audio, fs, pt)
             else:
                 audio = audio_ref
-
             Spec = Sample(audio,n_fft=4096,hop_size=512,n_bands=128,bark_basis=weights,bark_freqs=cent_freqs,ear_basis=db_diffs,numpy_input=True).bgram
 
             Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))

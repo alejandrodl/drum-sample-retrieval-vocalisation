@@ -174,7 +174,7 @@ for m in range(len(modes)):
 
     print('Training models...')
 
-    for it in range(3,num_iterations):
+    for it in range(num_iterations):
 
         print('\n')
         print('Iteration ' + str(it))

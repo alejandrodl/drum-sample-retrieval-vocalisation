@@ -119,7 +119,7 @@ Duplicate = np.delete(Duplicate, indices_delete)
 
 ### Make data for LMER analysis
 
-string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,Heuristic,CAEB,CAE,CAESL,CAEDL,CAESDL'
+string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,Random,Heuristic,CAEBOriginal,CAEB,CAE,CAESL,CAEDL,CAESDL'
 
 header_list = []
 c = 0
@@ -183,8 +183,8 @@ for it in range(num_iterations):
 
     f = open('results/LMER_Dataset_' + str(it) + '.csv','w')
 
-    string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,Heuristic,CAEB,CAE,CAESL,CAEDL,CAESDL'
-    modes = ['Heuristic','CAE-B','CAE','CAE-SL','CAE-DL','CAE-SDL']
+    string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,Random,Heuristic,CAEBOriginal,CAEB,CAE,CAESL,CAEDL,CAESDL'
+    modes = ['Random','Heuristic','CAE-B-Original','CAE-B','CAE','CAE-SL','CAE-DL','CAE-SDL']
     f.write(string_head)
     f.write('\n')
 
@@ -194,8 +194,13 @@ for it in range(num_iterations):
 
         # Load Embeddings
         if mode=='Heuristic':
-            embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_Heuristic.npy')
-            embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_Heuristic.npy')
+            embeddings_ref = np.load('data/processed/' + mode + '/Dataset_Ref_Heuristic.npy')
+            embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_Imi_Heuristic.npy')
+        elif mode=='Random':
+            np.random.seed(it)
+            embeddings_ref = np.random.rand(18,32)
+            np.random.seed(42+it)
+            embeddings_imi_pre = np.random.rand(252,32)
         else:
             embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
             embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
@@ -247,7 +252,7 @@ for it in range(num_iterations):
 
     ### Calculate accuracy
 
-    string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,Heuristic,CAEB,CAE,CAESL,CAEDL,CAESDL'
+    string_head = ',trial,listener,imitator,imitated_sound,rated_sound,rating,duplicate_flag,Random,Heuristic,CAEBOriginal,CAEB,CAE,CAESL,CAEDL,CAESDL'
     string_head = string_head[1:]
             
     header_list = []
@@ -300,10 +305,8 @@ for i in range(len(header_list[7:])):
     print('Accuracy ' + modes[i] + ': ' + str(mean) + ' +- ' + str(ci95))
 
 
-
-
-
-'''colors = ['red','blue','orange','magenta','green','purple']
+'''
+colors = ['red','blue','orange','magenta','green','purple']
 
 CIs_95[CIs_95==np.inf] = 0
 CIs_99[CIs_99==np.inf] = 0
@@ -323,10 +326,11 @@ for n in range(12,18):
     #plt.errorbar(n+1,np.nanmean(Slopes[1:-10,n]), yerr=np.mean(CIs_95[1:-10,n]), fmt='D', ms=12, c=colors[int(n%6)], capsize=8)
     plt.errorbar(n+1,np.nanmean(Slopes[74:84,n]), yerr=np.mean(CIs_95[74:84,n]), fmt='D', ms=12, c='green', capsize=8)
 plt.xticks(np.arange(18)+1)
-plt.title('Regression Slopes for CVAE3 Final Model', fontsize=18)
+plt.title('Regression Slopes for CAE3 Final Model', fontsize=18)
 plt.xlabel('Imitated Drum Sound', fontsize=15)
 plt.ylabel('Fitted Slope', fontsize=15)
-plt.xlim([0,19])'''
+plt.xlim([0,19])
+'''
 
 
 

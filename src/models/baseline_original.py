@@ -28,12 +28,12 @@ from imblearn.under_sampling import NearMiss
 
 from sklearn.model_selection import StratifiedShuffleSplit
 
-from networks import *
-from utils import *
+from __networks import *
+from __utils import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -48,7 +48,7 @@ if gpus:
 
 # Create VAE
 
-modes = ['adib_best_var_long']
+modes = ['adib_original_data']
 latent_dim = 32
 
 epochs = 200
@@ -56,89 +56,22 @@ epochs = 200
 batch_size = 512
 num_iterations = 5
 
-replacements_0 = {'kd':0,'sd':0,'hhc':0,'hho':0}
-replacements_1 = {'kd':1,'sd':1,'hhc':1,'hho':1}
-replacements_03 = {'kd':0,'sd':1,'hhc':2,'hho':3}
-replacements_47 = {'kd':4,'sd':5,'hhc':6,'hho':7}
+print('Loading data...')
 
-# Vocal Imitations
+Pretrain_Dataset = np.load('../../data/interim/Dataset_Adib.npy').astype('float32')
 
-Pretrain_Dataset_IMI = np.zeros((1, 128, 128)).astype('float32')
-Pretrain_Classes_IMI = np.zeros(1)
-
-print('AVP')
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP.npy').astype('float32')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP.npy')))
-
-print('AVP Fixed')
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_AVP_Fixed.npy').astype('float32')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_AVP_Fixed.npy')))
-
-print('LVT 2')
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_2.npy').astype('float32')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_2.npy')))
-
-print('LVT 3')
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_LVT_3.npy').astype('float32')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_LVT_3.npy')))
-
-print('BTX')
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_BTX.npy').astype('float32')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_BTX.npy')))
-
-print('Beatbox')
-Pretrain_Dataset_IMI = np.vstack((Pretrain_Dataset_IMI, np.load('../../data/interim/Dataset_Beatbox.npy').astype('float32')))
-Pretrain_Classes_IMI = np.concatenate((Pretrain_Classes_IMI, np.load('../../data/interim/Classes_Beatbox.npy')))
-
-Pretrain_Dataset_IMI = Pretrain_Dataset_IMI[1:].astype('float32')
-Pretrain_Classes_IMI = Pretrain_Classes_IMI[1:]
-
-# Real Drums
-
-Pretrain_Dataset_REF = np.zeros((1, 128, 128)).astype('float32')
-Pretrain_Classes_REF = np.zeros(1)
-
-print('BFD')
-Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_BFD.npy').astype('float32')))
-Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_BFD.npy')))
-
-print('Misc')
-Pretrain_Dataset_REF = np.vstack((Pretrain_Dataset_REF, np.load('../../data/interim/Dataset_Misc.npy').astype('float32')))
-Pretrain_Classes_REF = np.concatenate((Pretrain_Classes_REF, np.load('../../data/interim/Classes_Misc.npy')))
-
-Pretrain_Dataset_REF = Pretrain_Dataset_REF[1:].astype('float32')
-Pretrain_Classes_REF = Pretrain_Classes_REF[1:]
-
-# Evaluation (VIPS)
-
-print('VIPS')
-Pretrain_Dataset_Eval_REF = np.load('../../data/interim/Dataset_VIPS_Ref.npy').astype('float32')
-Pretrain_Classes_Eval_REF = np.load('../../data/interim/Classes_VIPS_Ref.npy')
-Pretrain_Dataset_Eval_IMI = np.load('../../data/interim/Dataset_VIPS_Imi.npy').astype('float32')
-Pretrain_Classes_Eval_IMI = np.load('../../data/interim/Classes_VIPS_Imi.npy')
-
-print('Done.')
+Pretrain_Dataset_Eval_REF = np.load('../../data/interim/Dataset_VIPS_Original_Ref.npy').astype('float32')
+Pretrain_Classes_Eval_REF = np.load('../../data/interim/Classes_VIPS_Original_Ref.npy')
+Pretrain_Dataset_Eval_IMI = np.load('../../data/interim/Dataset_VIPS_Original_Imi.npy').astype('float32')
+Pretrain_Classes_Eval_IMI = np.load('../../data/interim/Classes_VIPS_Original_Imi.npy')
 
 print('Normalising data...')
 
-all_datasets = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI))
+min_data = -144.0
+max_data = -33.162918
 
-print('Normalising data...')
-
-min_data = np.min(all_datasets)
-max_data = np.max(all_datasets)
-
-print('Normalising data...')
-
-Pretrain_Dataset_REF = (Pretrain_Dataset_REF-min_data)/(max_data-min_data+1e-16)
-Pretrain_Dataset_IMI = (Pretrain_Dataset_IMI-min_data)/(max_data-min_data+1e-16)
-print('Normalising data...')
 Pretrain_Dataset_Eval_REF = np.clip((Pretrain_Dataset_Eval_REF-min_data)/(max_data-min_data+1e-16),0,1)
 Pretrain_Dataset_Eval_IMI = np.clip((Pretrain_Dataset_Eval_IMI-min_data)/(max_data-min_data+1e-16),0,1)
-
-print('Normalising data...')
-
-Pretrain_Dataset = np.vstack((Pretrain_Dataset_REF,Pretrain_Dataset_IMI)).astype('float32')
 
 print('Done.')
 
@@ -161,20 +94,13 @@ for m in range(len(modes)):
     print(mode)
     print('\n')
 
-
-    replacer = replacements_0.get
-    Pretrain_Classes_REF_Num = np.array([replacer(n,n) for n in Pretrain_Classes_REF.astype('U13')])
-    Pretrain_Classes_IMI_Num = np.array([replacer(n,n) for n in Pretrain_Classes_IMI.astype('U13')])
-    Pretrain_Classes_Eval_REF = np.array([replacer(n,n) for n in Pretrain_Classes_Eval_REF.astype('U13')])
-    Pretrain_Classes_Eval_IMI = np.array([replacer(n,n) for n in Pretrain_Classes_Eval_IMI.astype('U13')])
-
-    Pretrain_Classes = np.concatenate((Pretrain_Classes_REF_Num,Pretrain_Classes_IMI_Num))
+    Pretrain_Classes = np.zeros(Pretrain_Dataset.shape[0])
 
     # Train models
 
     print('Training models...')
 
-    for it in range(num_iterations):
+    for it in range(0,2):
 
         print('\n')
         print('Iteration ' + str(it))
@@ -198,7 +124,7 @@ for m in range(len(modes)):
 
         set_seeds(it)
 
-        model = adib_best_var(latent_dim)
+        model = adib(latent_dim)
 
         training_generator = tf.data.Dataset.from_tensor_slices((pretrain_dataset_train, pretrain_classes_train))
         training_generator = training_generator.batch(batch_size, drop_remainder=True)
@@ -207,7 +133,7 @@ for m in range(len(modes)):
         validation_generator = validation_generator.batch(batch_size, drop_remainder=True)
 
         with tf.device(gpu_name):
-            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(7,0),LearningRateSchedulerCustom(4)], shuffle=True)
+            history = model.fit(training_generator, validation_data=validation_generator, epochs=epochs, callbacks=[EarlyStoppingAtMinLoss(10,0)], shuffle=True)
 
         model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(it) + '.tf')
 
@@ -217,9 +143,8 @@ for m in range(len(modes)):
         Pretrain_Dataset_Eval_IMI_Expanded = np.expand_dims(Pretrain_Dataset_Eval_IMI,axis=-1)
 
         extractor = tf.keras.Sequential()
-        for layer in model.layers[1:2]:
-            for sublayer in layer.layers[:15]:
-                extractor.add(sublayer)
+        for layer in model.layers[:2]:
+            extractor.add(layer)
         extractor.built = True
 
         embeddings_ref = extractor.predict(Pretrain_Dataset_Eval_REF_Expanded)

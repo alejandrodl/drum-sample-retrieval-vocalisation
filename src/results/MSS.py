@@ -11,12 +11,16 @@ from skbio.stats.distance import mantel
 # Parameters
 
 latent_dim = 32
-load_data_bool = True
+
+save_bool = False
+load_data_bool = False
 
 num_iterations = 5
-modes = ['Heuristic','CAE-B','CAE','CAE-SL','CAE-DL','CAE-SDL']
+modes = ['Random','Heuristic','CAE-B-Original','CAE-B','CAE','CAE-SL','CAE-DL','CAE-SDL']
 
 if load_data_bool:
+
+    # Load Data
 
     p_values = np.load('results/p_values.npy')
     for md in range(len(modes)):
@@ -40,8 +44,13 @@ else:
         for it in range(num_iterations):
             # Load Embeddings
             if mode=='Heuristic':
-                embeddings_ref = np.load('data/processed/' + mode + '/Dataset_VIPS_Ref_Heuristic.npy')
-                embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_VIPS_Imi_Heuristic.npy')
+                embeddings_ref = np.load('data/processed/' + mode + '/Dataset_Ref_Heuristic.npy')
+                embeddings_imi_pre = np.load('data/processed/' + mode + '/Dataset_Imi_Heuristic.npy')
+            elif mode=='Random':
+                np.random.seed(it)
+                embeddings_ref = np.random.rand(18,32)
+                np.random.seed(42+it)
+                embeddings_imi_pre = np.random.rand(252,32)
             else:
                 embeddings_ref = np.load('data/processed/' + mode + '/embeddings_ref_' + mode + '_' + str(it) + '.npy')
                 embeddings_imi_pre = np.load('data/processed/' + mode + '/embeddings_imi_' + mode + '_' + str(it) + '.npy')
@@ -71,7 +80,6 @@ else:
     # Perform Mantel test
 
     num_tests = 5
-
     mantel_scores = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
     p_values = np.zeros((len(modes),num_iterations,14,latent_dim,num_tests))
 
@@ -86,6 +94,19 @@ else:
                         score, p_value, _ = mantel(distance_matrices_ref[md,it,emb],distance_matrices_imi[md,it,i,emb])
                         mantel_scores[md,it,i,emb,t] = score
                         p_values[md,it,i,emb,t] = p_value
-        np.save('results/mantel_scores', mantel_scores)
-        np.save('results/p_values', p_values)
+        if save_bool:
+            np.save('results/mantel_scores', mantel_scores)
+            np.save('results/p_values', p_values)
         print('Percentage of Significant Mantel Scores ' + modes[md] + ': ' + str((p_values[md]<0.05).sum()/p_values[md].size))
+
+
+'''modes = ['Heuristic','CAE-B','CAE','CAE-SL','CAE-DL','CAE-SDL']
+for n in range(6):
+    mantel_scores_flat = mantel_scores[n].flatten()
+    p_values_flat = p_values[n].flatten()
+    scores = []
+    for i in range(len(p_values_flat)):
+        if p_values_flat[i]<=0.05:
+            scores.append(mantel_scores_flat[i])
+    print(modes[n])
+    print(np.mean(np.array(scores)))'''
